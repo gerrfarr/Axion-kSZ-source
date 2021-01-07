@@ -11,7 +11,7 @@ class Cosmology(object):
     Mpc_to_cm = 3.086e24  # cm/Mpc
     Mpc_to_m = 3.08568e22  # m/Mpc
     E_to_invL = 1 / 1.9746359e-7  # m^-1/eV
-    RHO_C = 1.86e-29  # g/cm^-3/h^2 (rho_B=Omega_Bh2 RHO_C)
+    RHO_C = 1.86e-29  # g/cm^3/h^2 (rho_B=Omega_Bh2 RHO_C)
     m_planck_L = 1.91183e57  # 1/Mpc
     delta_crit = 1.686
     m_sun = 1.988e33  # g
@@ -134,9 +134,9 @@ class Cosmology(object):
     def rho_mean(self):
         """
 
-        :return: mean matter density in solar masses per cubic cm
+        :return: mean matter density in solar masses per cubic Mpc
         """
-        return self.omegaM*self.RHO_C*self.Mpc_to_cm**3/self.m_sun
+        return self.omegaM*self.h**2*self.RHO_C*self.Mpc_to_cm**3/self.m_sun
 
     def E(self, z):
         return np.sqrt(self.__OmegaR * (1 + z)**4 + self.OmegaM * (1 + z)**3 + self.OmegaLambda + (1 - self.OmegaM - self.OmegaLambda) * (1 + z)**2)

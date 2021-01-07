@@ -6,7 +6,7 @@ from ..auxiliary.window_functions import WindowFunctions
 from ..auxiliary.integration_helper import IntegrationHelper
 from .cosmology import Cosmology
 import numpy as np
-from scipy.interpolate import interp1d
+from scipy.interpolate import interp1d, RectBivariateSpline
 
 class SigmaInterpolator(object):
 
@@ -22,38 +22,26 @@ class SigmaInterpolator(object):
         self.__power = power
         self.__growth = growth
         self.__intHelper = integrationHelper
-        self.__window_function=window_function
+        self.__window_function = window_function
 
-        if window_function=='top_hat':
-            self.__window=WindowFunctions.top_hat
-            self.__radius_of_mass = lambda m: WindowFunctions.radius_of_mass_top_hat(m)/self.__cosmo.rho_mean**(1/3)
-            self.__mass_of_radius = lambda r: WindowFunctions.mass_of_radius_top_hat(r)*self.__cosmo.rho_mean
+        self.window = None
+        self.dwindow = None
+        self.radius_of_mass = None
+        self.mass_of_radius = None
 
-        elif window_function=='gaussian':
-            self.__window = WindowFunctions.gaussian
-            self.__radius_of_mass = lambda m: WindowFunctions.radius_of_mass_gaussian(m) / self.__cosmo.rho_mean**(1 / 3)
-            self.__mass_of_radius = lambda r: WindowFunctions.mass_of_radius_gaussian(r) * self.__cosmo.rho_mean
+        WindowFunctions.set_window_functions(self, window_function, self.__cosmo)
 
-        elif window_function=='sharp_k':
-            self.__window = WindowFunctions.sharp_k
-            self.__radius_of_mass = lambda m: WindowFunctions.radius_of_mass_sharp_k(m) / self.__cosmo.rho_mean**(1 / 3)
-            self.__mass_of_radius = lambda r: WindowFunctions.mass_of_radius_sharp_k(r) * self.__cosmo.rho_mean
-
-        elif window_function=='none':
-            self.__window = WindowFunctions.no_window
-            self.__radius_of_mass = lambda m: WindowFunctions.radius_of_mass_top_hat(m) / self.__cosmo.rho_mean**(1 / 3)
-            self.__mass_of_radius = lambda r: WindowFunctions.mass_of_radius_top_hat(r) * self.__cosmo.rho_mean
-
-        else:
-            raise Exception("Unknown window function: " +str(window_function))
-
-        self.__r_vals = np.logspace(np.log10(self.__radius_of_mass(mMin)), np.log10(self.__radius_of_mass(mMax)), Nr)
+        self.__r_vals = np.logspace(np.log10(self.radius_of_mass(mMin)), np.log10(self.radius_of_mass(mMax)), Nr)
         self.__z_vals = z_vals
-        self.__sigma_sq_vals = np.zeros((len(self.__r_vals), len(self.__z_vals)))
+        self.__sigma_sq_vals = None
+        self.__dsigma_sq_dr_vals = None
+        self.__dsigma_sq_dloga_vals = None
 
-        self.__interpolators=[None for i in range(len(self.__z_vals))]
+        self.__interpolator = None
+        self.__interpolator_dr = None
+        self.__interpolator_dloga = None
 
-    def compute(self, kmin, kmax, smart=True):
+    def compute(self, kmin, kmax, smart=True, do_dr=True, do_dloga=True):
         if self.__window_function == 'sharp_k' and smart:
             eval_vals, weights = self.__intHelper.get_points_weights()
             kmax_vals = np.clip(1/self.__r_vals, kmin, kmax)
@@ -70,22 +58,66 @@ class SigmaInterpolator(object):
             rMesh, zMesh, kMesh = np.meshgrid(self.__r_vals, self.__z_vals, k_eval_vals)
             rMesh, zMesh, weightMesh = np.meshgrid(self.__r_vals, self.__z_vals, k_eval_weights)
 
-        print(np.shape(weightMesh))
-        integrand = kMesh**2*self.__growth(kMesh, zMesh)**2*self.__power(kMesh)*self.__window(kMesh*rMesh)**2
+        integrand_base = kMesh**2*self.__growth(kMesh, zMesh)**2*self.__power(kMesh)
+        integrand_sigma = integrand_base * self.window(kMesh * rMesh)**2
 
-        sigma_sq_vals = 1/(2*np.pi**2)*np.sum(integrand*weightMesh, axis=-1)
+        sigma_sq_vals = 1/(2*np.pi**2)*np.sum(integrand_sigma*weightMesh, axis=-1)
         self.__sigma_sq_vals = sigma_sq_vals
 
-        for z_i, z in enumerate(self.__z_vals):
-            self.__interpolators[z_i] = interp1d(np.log10(self.__r_vals), np.sqrt(self.__sigma_sq_vals[z_i]))
+        self.__interpolator = RectBivariateSpline(np.log10(self.__r_vals), self.__z_vals, self.__sigma_sq_vals.T, bbox=[np.min(np.log10(self.__r_vals)), np.max(np.log10(self.__r_vals)), np.min(self.__z_vals), np.max(self.__z_vals)], kx=3, ky=1, s=0)
 
-    def __sigma_interpolation(self, r, z):
-        assert(np.min(np.fabs(self.__z_vals-z))<1.0e-5)
-        return self.__interpolators[np.argmin(np.fabs(self.__z_vals-z))](np.log10(r))
+        if do_dr and self.__window_function != 'sharp_k':
+            integrand_dr = integrand_base * kMesh * self.dwindow(kMesh * rMesh) * self.window(kMesh * rMesh)
+            dsigma_sq_dr = 2 / (2 * np.pi**2) * np.sum(integrand_dr * weightMesh, axis=-1)
+            self.__dsigma_sq_dr_vals = dsigma_sq_dr
+
+            self.__interpolator_dr = RectBivariateSpline(np.log10(self.__r_vals), self.__z_vals, self.__dsigma_sq_dr_vals.T, bbox=[np.min(np.log10(self.__r_vals)), np.max(np.log10(self.__r_vals)), np.min(self.__z_vals), np.max(self.__z_vals)], kx=3, ky=1, s=0)
+        elif do_dr and self.__window_function == 'sharp_k':
+            k_vals = np.clip(1/self.__r_vals, kmin, kmax)
+            kMesh2, zMesh2 = np.meshgrid(k_vals, self.__z_vals)
+            dsigma_sq_dr = - 1 / (2 * np.pi**2) * kMesh2**4 * self.__growth(kMesh2, zMesh2)**2 * self.__power(kMesh2)
+            dsigma_sq_dr[:,(1/self.__r_vals < kmin) + (1/self.__r_vals > kmax)] = np.nan
+            self.__dsigma_sq_dr_vals = dsigma_sq_dr
+
+            self.__interpolator_dr = RectBivariateSpline(np.log10(self.__r_vals), self.__z_vals, self.__dsigma_sq_dr_vals.T, bbox=[np.min(np.log10(self.__r_vals)), np.max(np.log10(self.__r_vals)), np.min(self.__z_vals), np.max(self.__z_vals)], kx=3, ky=1, s=0)
+        else:
+            pass
+
+        if do_dloga:
+            integrand_dloga = integrand_sigma * self.__growth.f(kMesh, zMesh)
+            dsigma_sq_dloga = np.sum(integrand_dloga*weightMesh, axis=-1)/(np.pi**2)
+            self.__dsigma_sq_dloga_vals = dsigma_sq_dloga
+            self.__interpolator_dloga = RectBivariateSpline(np.log10(self.__r_vals), self.__z_vals, self.__dsigma_sq_dloga_vals.T, bbox=[np.min(np.log10(self.__r_vals)), np.max(np.log10(self.__r_vals)), np.min(self.__z_vals), np.max(self.__z_vals)], kx=3, ky=1, s=0)
+
+    def __sigma_sq_interpolation(self, r, z):
+        return np.squeeze(self.__interpolator.ev(np.log10(r), z))
+
+    def __dsigma_sq_dr_interpolation(self, r, z):
+        return np.squeeze(self.__interpolator_dr.ev(np.log10(r), z))
+
+    def __dsigma_sq_dloga_interpolation(self, r, z):
+        return np.squeeze(self.__interpolator_dloga.ev(np.log10(r), z))
 
     def __call__(self, m, z):
-        return self.__sigma_interpolation(self.__radius_of_mass(m), z)
+        return np.sqrt(self.__sigma_sq_interpolation(self.radius_of_mass(m), z))
 
     def sigma_of_r(self, r, z):
-        return self.__sigma_interpolation(r, z)
+        return np.sqrt(self.__sigma_sq_interpolation(r, z))
 
+    def dsigma_dloga_of_r(self, r, z):
+        return self.__dsigma_sq_dloga_interpolation(r, z)/(2*self.sigma_of_r(r, z))
+
+    def dsigma_dloga_of_m(self, m, z):
+        return self.__dsigma_sq_dloga_interpolation(self.radius_of_mass(m), z) / (2 * self(m, z))
+
+    def dsigma_dr_of_r(self, r, z):
+        return self.__dsigma_sq_dr_interpolation(r, z) / (2 * self.sigma_of_r(r, z))
+
+    def dsigma_dr_of_m(self, m, z):
+        return self.__dsigma_sq_dr_interpolation(self.radius_of_mass(m), z) / (2 * self(m, z))
+
+    def dsigma_dm(self, m, z):
+        return self.dsigma_dr_of_m(m,z) * self.radius_of_mass(m) / m / 3.0
+
+    def dlogSigma_dlogm(self, m, z):
+        return self.dsigma_dm(m, z)*m/self(m,z)
