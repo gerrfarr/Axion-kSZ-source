@@ -23,7 +23,7 @@ class WindowFunctions(object):
 
     @staticmethod
     def dgaussian(x):
-        return -x*np.exp(-x**2 / 2)
+        return -x*WindowFunctions.gaussian(x)
 
     @staticmethod
     def no_window(x):
@@ -47,7 +47,7 @@ class WindowFunctions(object):
 
     @staticmethod
     def mass_of_radius_gaussian(R):
-        return np.sqrt(2 * np.pi) * (4 * np.pi / 3)**(-1 / 3) * WindowFunctions.mass_of_radius_top_hat(R)
+        return (2 * np.pi)**(3/2) * R**3
 
     @staticmethod
     def mass_of_radius_sharp_k(R):

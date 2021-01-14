@@ -3,15 +3,21 @@ from .cosmology import Cosmology
 
 import numpy as np
 
-class PressSchechterMassFunction(object):
+class MassFunction(object):
     def __init__(self, cosmo, sigmaInterpolator):
         """
 
-        :type sigmaInterpolator: SigmaInterpolator
-        :type cosmo: Cosmology
-        """
-        self.__cosmo = cosmo
-        self.__sigmaInt = sigmaInterpolator
+                :type sigmaInterpolator: SigmaInterpolator
+                :type cosmo: Cosmology
+                """
+        self.cosmo = cosmo
+        self.sigmaInt = sigmaInterpolator
 
+class PressSchechterMassFunction(MassFunction):
     def __call__(self, m, z):
-        return np.sqrt(2 / np.pi) * (self.__cosmo.rho_mean * self.__cosmo.delta_crit / self.__sigmaInt(m, z) / m**2) * np.fabs(self.__sigmaInt.dlogSigma_dlogm(m, z)) * np.exp(-self.__cosmo.delta_crit**2 / (2 * self.__sigmaInt(m, z)**2))
+        vals = np.sqrt(2 / np.pi) * (self.cosmo.rho_mean * self.cosmo.delta_crit / self.sigmaInt(m, z) / m) * np.fabs(self.sigmaInt.dlogSigma_dlogm(m, z)) * np.exp(-self.cosmo.delta_crit**2 / (2 * self.sigmaInt(m, z)**2))
+        return vals
+
+class JenkinsMassFunction(MassFunction):
+    def __call__(self, m, z):
+        raise NotImplementedError("This is not implemented yet!")

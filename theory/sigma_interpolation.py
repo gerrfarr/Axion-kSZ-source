@@ -24,6 +24,7 @@ class SigmaInterpolator(object):
         self.__intHelper = integrationHelper
         self.__window_function = window_function
 
+
         self.window = None
         self.dwindow = None
         self.radius_of_mass = None
