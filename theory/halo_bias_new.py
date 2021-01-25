@@ -36,11 +36,11 @@ class HaloBias(HaloBiasBase):
         dump, nBarMesh = np.meshgrid(k_vals, self._nbar)
 
         if self._window_function == 'sharp_k':
-            xmax = np.log(np.clip(rmax*k_vals, rmin*k_vals, 1.0))
+            xmax = np.clip(rmax*k_vals, rmin*k_vals, 1.0)
         else:
-            xmax = np.log(rmax*k_vals)
+            xmax = rmax*k_vals
 
-        xmin = np.log(rmin*k_vals)
+        xmin = rmin*k_vals
 
         x_eval_vals = np.outer((xmax - xmin) / 2, eval_vals) + np.outer((xmax + xmin) / 2, np.ones(np.shape(eval_vals)))
         eval_weights = np.outer((xmax - xmin) / 2, weights)
@@ -48,9 +48,9 @@ class HaloBias(HaloBiasBase):
         xMesh = np.einsum('i, jk->ijk', np.ones(np.shape(z_vals)), x_eval_vals)
         weightMesh = np.einsum('i, jk->ijk', np.ones(np.shape(z_vals)), eval_weights)
 
-        mMesh = self.mass_of_radius(np.exp(xMesh)/kMesh)
+        mMesh = self.mass_of_radius(xMesh/kMesh)
 
-        integrand1 = 3 * self._mass_function(mMesh, zMesh) * weightMesh * self.window(xMesh)
+        integrand1 = 3/xMesh * self._mass_function(mMesh, zMesh) * weightMesh * self.window(xMesh)
         integrand2 = integrand1 * self.simple_bias(mMesh, zMesh)
 
         vals1, vals2 = np.sum(integrand1, axis=-1), np.sum(integrand2, axis=-1)
@@ -71,8 +71,8 @@ class HaloBias(HaloBiasBase):
         else:
             raise Exception("q={} is not defined.".format(q))
 
-        vals[k > np.max(self._k_vals)] = np.nan
-        vals[k < np.min(self._k_vals)] = np.nan
+        vals[k > np.max(self._k_vals)] = 0.0
+        vals[k < np.min(self._k_vals)] = 0.0
         return vals
 
 class HaloBiasFFTLog(HaloBias):
