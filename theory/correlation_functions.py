@@ -2,7 +2,7 @@ from ..axion_camb_wrappers.power_interpolation import LinearPowerInterpolation
 from ..axion_camb_wrappers.growth_interpolation import GrowthInterpolation
 from ..auxiliary.integration_helper import IntegrationHelper
 from .cosmology import Cosmology
-from .halo_bias import HaloBiasLit
+from .halo_bias_base import HaloBiasBase
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -13,7 +13,7 @@ class CorrelationFunctions(object):
         """
 
         :type integrationHelper: IntegrationHelper
-        :type halo_bias: HaloBiasLit
+        :type halo_bias: HaloBiasBase
         :type growth: GrowthInterpolation
         :type linear_power: LinearPowerInterpolation
         :type cosmo: Cosmology
