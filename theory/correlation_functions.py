@@ -9,7 +9,7 @@ from scipy.interpolate import interp1d
 
 class CorrelationFunctions(object):
 
-    def __init(self, cosmo, linear_power, growth, halo_bias, kMin, kMax, z_vals, rMin, rMax, integrationHelper, Nr=1000):
+    def __init__(self, cosmo, linear_power, growth, halo_bias, kMin, kMax, z_vals, rMin, rMax, integrationHelper, Nr=1000):
         """
 
         :type integrationHelper: IntegrationHelper
@@ -34,22 +34,22 @@ class CorrelationFunctions(object):
 
         self.__intHelper = integrationHelper
 
-    def compute(self, unbiased=False):
+    def compute(self, unbiased=False, old_bias=False):
         if unbiased:
-            xi_unbiased, dxi_dloga_unbiased, xi, dxi_dloga = self.compute_xi(self.__r_vals, self.__z_vals, deriv=True, unbiased=True)
+            xi_unbiased, dxi_dloga_unbiased, xi, dxi_dloga = self.compute_xi(self.__r_vals, self.__z_vals, deriv=True, unbiased=True, old_bias=old_bias)
 
             dbarxi_dloga = self.compute_dbarxi_dloga(self.__r_vals, self.__z_vals, dxi_dloga)
             dbarxi_dloga_unbiased = self.compute_dbarxi_dloga(self.__r_vals, self.__z_vals, dxi_dloga_unbiased)
 
             return xi_unbiased, xi, dbarxi_dloga_unbiased, dbarxi_dloga
         else:
-            xi, dxi_dloga = self.compute_xi(self.__r_vals, self.__z_vals, deriv=True, unbiased=False)
+            xi, dxi_dloga = self.compute_xi(self.__r_vals, self.__z_vals, deriv=True, unbiased=False, old_bias=old_bias)
 
             dbarxi_dloga = self.compute_dbarxi_dloga(self.__r_vals, self.__z_vals, dxi_dloga)
 
             return xi, dbarxi_dloga
 
-    def compute_xi(self, r, z, deriv=True, unbiased=False):
+    def compute_xi(self, r, z, deriv=True, unbiased=False, old_bias=False):
         eval_vals, weights = self.__intHelper.get_points_weights()
         xmin_vals, xmax_vals = self.__kMin*r, self.__kMax*r
 
@@ -64,11 +64,17 @@ class CorrelationFunctions(object):
         kMesh = xMesh/rMesh
 
         integrand_unbiased = xMesh*np.sin(xMesh)*self.__linear_power(kMesh)*self.__growth(kMesh, zMesh)**2*weightMesh
-        integrand_biased = integrand_unbiased * self.__halo_bias(kMesh, zMesh, 1)**2
+        if old_bias:
+            integrand_biased = integrand_unbiased * self.__halo_bias(kMesh, zMesh, 2)
+        else:
+            integrand_biased = integrand_unbiased * self.__halo_bias(kMesh, zMesh, 1)**2
 
         if deriv:
             integrand_deriv_unbiased = integrand_unbiased * self.__growth.f(kMesh, zMesh)
-            integrand_deriv_biased = integrand_unbiased * self.__growth.f(kMesh, zMesh) * self.__halo_bias(kMesh, zMesh, 1) * self.__halo_bias(kMesh, zMesh, 0)
+            if old_bias:
+                integrand_deriv_biased = integrand_unbiased * self.__growth.f(kMesh, zMesh) * self.__halo_bias(kMesh, zMesh, 1)
+            else:
+                integrand_deriv_biased = integrand_unbiased * self.__growth.f(kMesh, zMesh) * self.__halo_bias(kMesh, zMesh, 1) * self.__halo_bias(kMesh, zMesh, 0)
 
         if unbiased:
             if deriv:
