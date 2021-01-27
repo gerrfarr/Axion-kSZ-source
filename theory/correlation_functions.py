@@ -103,4 +103,7 @@ class CorrelationFunctions(object):
 
         return 3*np.sum(integrand, axis=-1)/r**3
 
+    def get_r_vals(self):
+        return self.__r_vals
+
 
