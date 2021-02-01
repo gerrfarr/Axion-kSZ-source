@@ -28,13 +28,20 @@ class HaloBiasBase(object):
         if window_function == 'sharp_k' and kMax > 1 / self.radius_of_mass(mMin):
             warnings.warn(f"The given value of k_max={kMax:.2E} is not feasible because you chose a sharp-k filter and a maximum mass of m_min={mMin:.2E}. k_max has instead be set to {1 / self.radius_of_mass(mMin):.2E}", RuntimeWarning)
             kMax = 1.0 / self.radius_of_mass(mMin)
+            kMin = 1.0 / self.radius_of_mass(mMax)
 
         self._k_vals = np.logspace(np.log10(kMin), np.log10(kMax), Nk)
+        self._kMin, self._kMax = kMin, kMax
         self._z_vals = z_vals
         self._mMin, self._mMax = mMin, mMax
 
+        self._nbar = None
+
     def simple_bias(self, m_vals, z_vals):
         return 1+(self.__cosmo.delta_crit**2 - self.__sigma(m_vals, 0.0)**2)/(self.__sigma(m_vals, 0.0)*self.__sigma(m_vals, z_vals)*self.__cosmo.delta_crit)
+
+    def get_nbar(self, z):
+        return self._nbar[np.where(z == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
 
     def mass_averaged_bias(self, *args, **kwargs):
         raise NotImplementedError("Use sub-classes")

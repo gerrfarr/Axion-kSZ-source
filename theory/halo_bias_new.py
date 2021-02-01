@@ -27,13 +27,11 @@ class HaloBias(HaloBiasBase):
         self.__interpolator_B = None
         self.__interpolator_N = None
 
-        self._nbar = np.array([spIntegrate(lambda logM: mass_function(np.exp(logM), z), np.log(mMin), np.log(mMax))[0] for z in self._z_vals])
+        self._b_mean = None
+        self._m_mean = None
 
-        self._b_mean = np.array([spIntegrate(lambda logM: self.simple_bias(np.exp(logM), z) * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax))[0] for z in self._z_vals]) / self._nbar
-        self._m_mean = np.array([spIntegrate(lambda logM: np.exp(logM) * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax))[0] for z in self._z_vals]) / self._nbar
-
-        self._b_assign_func = lambda z: self._b_mean[np.where(z == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
-        self._m_assign_func = lambda z: self._m_mean[np.where(z == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
+        self._b_assign_func = lambda z: np.nan
+        self._m_assign_func = lambda z: np.nan
 
     def mass_averaged_bias(self, k_vals, z_vals, mMin, mMax):
         rmin, rmax = self.radius_of_mass(mMin), self.radius_of_mass(mMax)
@@ -64,13 +62,25 @@ class HaloBias(HaloBiasBase):
 
         return vals2 / nBarMesh, vals1 / nBarMesh
 
+    def compute_asymptotic(self):
+        self._nbar = np.array([spIntegrate(lambda logM: self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax))[0] for z in self._z_vals])
+
+        self._b_mean = np.array([spIntegrate(lambda logM: self.simple_bias(np.exp(logM), z) * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax))[0] for z in self._z_vals]) / self._nbar
+        self._m_mean = np.array([spIntegrate(lambda logM: np.exp(logM) * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax))[0] for z in self._z_vals]) / self._nbar
+
+        self._b_assign_func = lambda z: self._b_mean[np.where(z == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
+        self._m_assign_func = lambda z: self._m_mean[np.where(z == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
+
     def compute(self):
+        self.compute_asymptotic()
+
         self.__bias_vals, self.__n_vals = self.mass_averaged_bias(self._k_vals, self._z_vals, self._mMin, self._mMax)
 
         self.__interpolator_B = RectBivariateSpline(np.log10(self._k_vals), self._z_vals, self.__bias_vals.T, bbox=[np.min(np.log10(self._k_vals)), np.max(np.log10(self._k_vals)), np.min(self._z_vals), np.max(self._z_vals)], kx=3, ky=1, s=0)
         self.__interpolator_N = RectBivariateSpline(np.log10(self._k_vals), self._z_vals, self.__n_vals.T, bbox=[np.min(np.log10(self._k_vals)), np.max(np.log10(self._k_vals)), np.min(self._z_vals), np.max(self._z_vals)], kx=3, ky=1, s=0)
 
     def compute_approximation(self, N=50000):
+        self.compute_asymptotic()
 
         if self._window_function=="top_hat" or self._window_function=="gaussian":
             class interp_emulator:

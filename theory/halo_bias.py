@@ -7,6 +7,7 @@ from ..auxiliary.integration_helper import IntegrationHelper
 from scipy.interpolate import interp2d, RectBivariateSpline
 import warnings
 import mcfit
+from scipy.integrate import quad as spIntegrate
 
 class HaloBias(HaloBiasBase):
     def __init__(self, cosmo, sigma, mass_function, mMin, mMax, kMin, kMax, z_vals, integrationHelper, Nk=1024, window_function='top_hat'):
@@ -23,6 +24,23 @@ class HaloBias(HaloBiasBase):
 
         self.__interpolator_q1 = None
         self.__interpolator_q2 = None
+
+        self._bsqm_mean = None
+        self._bm_mean = None
+        self._m_mean = None
+
+        self._bsqm_assign_func = lambda z: np.nan
+        self._bm_assign_func = lambda z: np.nan
+        self._m_assign_func = lambda z: np.nan
+
+        if self._window_function == "top_hat":
+            self._bsq_TH = None
+            self._b_TH = None
+            self._n_TH = None
+
+            self._bsq_TH_assign_func = lambda z: np.nan
+            self._b_TH_assign_func = lambda z: np.nan
+            self._n_TH_assign_func = lambda z: np.nan
 
     def mass_averaged_bias(self, k_vals, z_vals, mMin, mMax):
         rmin, rmax = self.radius_of_mass(mMin), self.radius_of_mass(mMax)
@@ -56,7 +74,30 @@ class HaloBias(HaloBiasBase):
 
         return num1/denom, num2/denom
 
+    def compute_asymptotic(self):
+        self._nbar = np.array([spIntegrate(lambda logM: self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax))[0] for z in self._z_vals])
+
+        self._bsqm_mean = np.array([spIntegrate(lambda logM: np.exp(logM) * self.simple_bias(np.exp(logM), z)**2 * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax))[0] for z in self._z_vals]) / self._nbar
+        self._bm_mean = np.array([spIntegrate(lambda logM: np.exp(logM) * self.simple_bias(np.exp(logM), z) * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax))[0] for z in self._z_vals]) / self._nbar
+        self._m_mean = np.array([spIntegrate(lambda logM: np.exp(logM) * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax))[0] for z in self._z_vals]) / self._nbar
+
+        self._bsqm_assign_func = lambda z: self._bsqm_mean[np.where(z == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
+        self._bm_assign_func = lambda z: self._bm_mean[np.where(z == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
+        self._m_assign_func = lambda z: self._m_mean[np.where(z == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
+
+        if self._window_function == "top_hat":
+            self._bsq_TH = np.array([spIntegrate(lambda x: x / self.mass_of_radius(x / self._kMax) * self._mass_function(self.mass_of_radius(x / self._kMax), z) * self.simple_bias(self.mass_of_radius(x / self._kMax), z)**2, self.radius_of_mass(self._mMin) * self._kMax, self.radius_of_mass(self._mMax) * self._kMax)[0] for z in self._z_vals])
+            self._b_TH = np.array([spIntegrate(lambda x: x / self.mass_of_radius(x / self._kMax) * self._mass_function(self.mass_of_radius(x / self._kMax), z) * self.simple_bias(self.mass_of_radius(x / self._kMax), z), self.radius_of_mass(self._mMin) * self._kMax, self.radius_of_mass(self._mMax) * self._kMax)[0] for z in self._z_vals])
+
+            self._n_TH = np.array([spIntegrate(lambda x: x / self.mass_of_radius(x / self._kMax) * self._mass_function(self.mass_of_radius(x / self._kMax), z), self.radius_of_mass(self._mMin) * self._kMax, self.radius_of_mass(self._mMax) * self._kMax)[0] for z in self._z_vals])
+
+            self._bsq_TH_assign_func = lambda z: self._bsq_TH[np.where(z == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
+            self._b_TH_assign_func = lambda z: self._b_TH[np.where(z == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
+            self._n_TH_assign_func = lambda z: self._n_TH[np.where(z == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
+
     def compute(self):
+        self.compute_asymptotic()
+
         q1Bias, q2Bias = self.mass_averaged_bias(self._k_vals, self._z_vals, self._mMin, self._mMax)
 
         if self._window_function == 'sharp_k':
@@ -76,15 +117,51 @@ class HaloBias(HaloBiasBase):
         self.__interpolator_q2 = RectBivariateSpline(np.log10(self._k_vals), self._z_vals, self.__q2Bias_vals.T, bbox=[np.min(np.log10(self._k_vals)), np.max(np.log10(self._k_vals)), np.min(self._z_vals), np.max(self._z_vals)], kx=3, ky=1, s=0)
 
     def __call__(self, k, z, q):
-        if q==1:
+        if q == 1:
             vals = np.squeeze(self.__interpolator_q1.ev(np.log10(k), z))
-        elif q==2:
+
+            try:
+                if self._window_function == "top_hat":
+                    vals[k > self._kMax] = self._b_TH_assign_func(z[k < np.min(self._k_vals)]) / self._n_TH_assign_func(z[k < np.min(self._k_vals)])
+                elif self._window_function == "gaussian":
+                    vals[k > self._kMax] = self.simple_bias(self._mMin, z[k < np.min(self._k_vals)])
+                elif self._window_function == "sharp_k":
+                    vals[k > self._kMax] = np.nan
+
+                vals[k < self._kMin] = self._bm_assign_func(z[k < np.min(self._k_vals)]) / self._m_assign_func(z[k < np.min(self._k_vals)])
+
+            except (IndexError, TypeError):
+                if self._window_function == "top_hat":
+                    vals[k > self._kMax] = self._b_TH_assign_func(z) / self._n_TH_assign_func(z)
+                elif self._window_function == "gaussian":
+                    vals[k > self._kMax] = self.simple_bias(self._mMin, z)
+                elif self._window_function == "sharp_k":
+                    vals[k > self._kMax] = np.nan
+
+                vals[k < self._kMin] = self._bm_assign_func(z) / self._m_assign_func(z)
+        elif q == 2:
             vals = np.squeeze(self.__interpolator_q2.ev(np.log10(k), z))
+            try:
+                if self._window_function == "top_hat":
+                    vals[k > self._kMax] = self._bsq_TH_assign_func(z[k < np.min(self._k_vals)]) / self._n_TH_assign_func(z[k < np.min(self._k_vals)])
+                elif self._window_function == "gaussian":
+                    vals[k > self._kMax] = self.simple_bias(self._mMin, z[k < np.min(self._k_vals)])**2
+                elif self._window_function == "sharp_k":
+                    vals[k > self._kMax] = np.nan
+
+                vals[k < self._kMin] = self._bsqm_assign_func(z[k < np.min(self._k_vals)]) / self._m_assign_func(z[k < np.min(self._k_vals)])
+            except (IndexError, TypeError):
+                if self._window_function == "top_hat":
+                    vals[k > self._kMax] = self._bsq_TH_assign_func(z) / self._n_TH_assign_func(z)
+                elif self._window_function == "gaussian":
+                    vals[k > self._kMax] = self.simple_bias(self._mMin, z)**2
+                elif self._window_function == "sharp_k":
+                    vals[k > self._kMax] = np.nan
+
+                vals[k < self._kMin] = self._bsqm_assign_func(z) / self._m_assign_func(z)
         else:
             raise Exception("q={} is not defined.".format(q))
 
-        vals[k > np.max(self._k_vals)] = np.nan
-        vals[k < np.min(self._k_vals)] = np.nan
         return vals
 
 
