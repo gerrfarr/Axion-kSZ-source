@@ -9,7 +9,7 @@ from scipy.interpolate import interp1d
 
 class CorrelationFunctions(object):
 
-    def __init__(self, cosmo, linear_power, growth, halo_bias, kMin, kMax, z_vals, rMin, rMax, integrationHelper, r_vals=None, Nr=1000):
+    def __init__(self, cosmo, linear_power, growth, halo_bias, kMin, kMax, z_vals, rMin, r_vals, integrationHelper, Nr=1024):
         """
 
         :type integrationHelper: IntegrationHelper
@@ -30,27 +30,30 @@ class CorrelationFunctions(object):
         self.__rMin = rMin
 
         self.__z_vals = z_vals
-        if r_vals is None:
-            self.__r_vals = np.linspace(rMin, rMax, Nr)
-        else:
-            self.__r_vals = r_vals
+        self.__r_vals = np.unique(np.conncatenate((np.linspace(rMin, np.max(r_vals), Nr), r_vals)))
+        self.__r_selection = np.where(self.__r_vals[:,np.newaxis] == r_vals)[0]
 
         self.__intHelper = integrationHelper
 
+        self.__xi_unbiased = None
+        self.__xi = None
+        self.__dbarxi_dloga_unbiased = None
+        self.__dbarxi_dloga = None
+
     def compute(self, unbiased=False, old_bias=False):
         if unbiased:
-            xi_unbiased, dxi_dloga_unbiased, xi, dxi_dloga = self.compute_xi(self.__r_vals, self.__z_vals, deriv=True, unbiased=True, old_bias=old_bias)
+            self.__xi_unbiased, dxi_dloga_unbiased, self.__xi, dxi_dloga = self.compute_xi(self.__r_vals, self.__z_vals, deriv=True, unbiased=True, old_bias=old_bias)
 
-            dbarxi_dloga = self.compute_dbarxi_dloga(self.__r_vals, self.__z_vals, dxi_dloga)
-            dbarxi_dloga_unbiased = self.compute_dbarxi_dloga(self.__r_vals, self.__z_vals, dxi_dloga_unbiased)
+            self.__dbarxi_dloga = self.compute_dbarxi_dloga(self.__r_vals, self.__z_vals, dxi_dloga)
+            self.__dbarxi_dloga_unbiased = self.compute_dbarxi_dloga(self.__r_vals, self.__z_vals, dxi_dloga_unbiased)
 
-            return xi_unbiased, xi, dbarxi_dloga_unbiased, dbarxi_dloga
+            return self.__xi_unbiased[:, self.__r_selection], self.__xi[:, self.__r_selection], self.__dbarxi_dloga_unbiased[:, self.__r_selection], self.__dbarxi_dloga[:, self.__r_selection]
         else:
-            xi, dxi_dloga = self.compute_xi(self.__r_vals, self.__z_vals, deriv=True, unbiased=False, old_bias=old_bias)
+            self.__xi, dxi_dloga = self.compute_xi(self.__r_vals, self.__z_vals, deriv=True, unbiased=False, old_bias=old_bias)
 
-            dbarxi_dloga = self.compute_dbarxi_dloga(self.__r_vals, self.__z_vals, dxi_dloga)
+            self.__dbarxi_dloga = self.compute_dbarxi_dloga(self.__r_vals, self.__z_vals, dxi_dloga)
 
-            return xi, dbarxi_dloga
+            return self.__xi[:, self.__r_selection], self.__dbarxi_dloga[:, self.__r_selection]
 
     def compute_xi(self, r, z, deriv=True, unbiased=False, old_bias=False):
         eval_vals, weights = self.__intHelper.get_points_weights()
@@ -106,7 +109,6 @@ class CorrelationFunctions(object):
 
         return 3*np.sum(integrand, axis=-1)/r**3
 
-    def get_r_vals(self):
-        return self.__r_vals
+
 
 
