@@ -9,7 +9,7 @@ from scipy.interpolate import interp1d
 
 class CorrelationFunctions(object):
 
-    def __init__(self, cosmo, linear_power, growth, halo_bias, kMin, kMax, z_vals, rMin, rMax, integrationHelper, Nr=1000):
+    def __init__(self, cosmo, linear_power, growth, halo_bias, kMin, kMax, z_vals, rMin, rMax, integrationHelper, r_vals=None, Nr=1000):
         """
 
         :type integrationHelper: IntegrationHelper
@@ -30,7 +30,10 @@ class CorrelationFunctions(object):
         self.__rMin = rMin
 
         self.__z_vals = z_vals
-        self.__r_vals = np.linspace(rMin, rMax, Nr)
+        if r_vals is None:
+            self.__r_vals = np.linspace(rMin, rMax, Nr)
+        else:
+            self.__r_vals = r_vals
 
         self.__intHelper = integrationHelper
 
