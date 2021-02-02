@@ -162,7 +162,7 @@ class CosmologyCustomH(Cosmology):
 
     def H(self, z):
         try:
-            return self.__H_interp(z)
+            return self.__H_interp(z)*3000.0*100
         except TypeError:
             raise Exception("Interpolation of H is not defined. Set H first using function set_H_interpolation(H_interp)")
 
