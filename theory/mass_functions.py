@@ -13,6 +13,9 @@ class MassFunction(object):
         self.cosmo = cosmo
         self.sigmaInt = sigmaInterpolator
 
+    def __call__(self, *args, **kwargs):
+        raise NotImplementedError("This is not implemented here! Use sublcasses!")
+
 class PressSchechterMassFunction(MassFunction):
     def __call__(self, m, z):
         #output is dN/d log m
