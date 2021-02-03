@@ -30,7 +30,7 @@ class CorrelationFunctions(object):
         self.__rMin = rMin
 
         self.__z_vals = z_vals
-        self.__r_vals = np.unique(np.conncatenate((np.linspace(rMin, np.max(r_vals), Nr), r_vals)))
+        self.__r_vals = np.unique(np.concatenate((np.linspace(rMin, np.max(r_vals), Nr), r_vals)))
         self.__r_selection = np.where(self.__r_vals[:,np.newaxis] == r_vals)[0]
 
         self.__intHelper = integrationHelper
@@ -40,6 +40,9 @@ class CorrelationFunctions(object):
         self.__dbarxi_dloga_unbiased = None
         self.__dbarxi_dloga = None
 
+        self.__computed=False
+        self.__computed_unbiased = False
+
     def compute(self, unbiased=False, old_bias=False):
         if unbiased:
             self.__xi_unbiased, dxi_dloga_unbiased, self.__xi, dxi_dloga = self.compute_xi(self.__r_vals, self.__z_vals, deriv=True, unbiased=True, old_bias=old_bias)
@@ -47,13 +50,56 @@ class CorrelationFunctions(object):
             self.__dbarxi_dloga = self.compute_dbarxi_dloga(self.__r_vals, self.__z_vals, dxi_dloga)
             self.__dbarxi_dloga_unbiased = self.compute_dbarxi_dloga(self.__r_vals, self.__z_vals, dxi_dloga_unbiased)
 
+            self.__computed = True
+            self.__computed_unbiased = True
+
             return self.__xi_unbiased[:, self.__r_selection], self.__xi[:, self.__r_selection], self.__dbarxi_dloga_unbiased[:, self.__r_selection], self.__dbarxi_dloga[:, self.__r_selection]
         else:
             self.__xi, dxi_dloga = self.compute_xi(self.__r_vals, self.__z_vals, deriv=True, unbiased=False, old_bias=old_bias)
 
             self.__dbarxi_dloga = self.compute_dbarxi_dloga(self.__r_vals, self.__z_vals, dxi_dloga)
 
+            self.__computed = True
+
             return self.__xi[:, self.__r_selection], self.__dbarxi_dloga[:, self.__r_selection]
+
+    def get_correlation_functions(self, r_vals, z_vals, unbiased=False):
+        z_vals = np.asarray(z_vals)
+        r_vals = np.asarray(r_vals)
+        assert(np.all(np.isin(z_vals, self.__z_vals)) and self.__computed and np.max(r_vals)<=np.max(self.__r_vals) and np.min(r_vals)>=np.min(self.__r_vals))
+        assert(z_vals.shape == r_vals.shape or z_vals.shape == () or r_vals.shape == ())
+        if r_vals.shape == ():
+            shape = z_vals.shape
+        else:
+            shape = r_vals.shape
+
+        r_flat = r_vals.flatten()
+        z_flat = z_vals.flatten()
+
+        rindexa, rindexb = np.where(r_flat == self.__r_vals[:, np.newaxis])
+        zindexa, zindexb = np.where(z_flat == self.__z_vals[:, np.newaxis])
+
+        if np.all(np.isin(r_vals, self.__r_vals)):
+            out_xi = self.__xi[zindexa[zindexb.argsort()], rindexa[rindexb.argsort()]].reshape(shape)
+            out_dbarxi_dloga = self.__dbarxi_dloga[zindexa[zindexb.argsort()], rindexa[rindexb.argsort()]].reshape(shape)
+
+            if unbiased:
+                out_xi_unbiased = self.__xi_unbiased[zindexa[zindexb.argsort()], rindexa[rindexb.argsort()]].reshape(shape)
+                out_dbarxi_dloga_unbiased = self.__dbarxi_dloga_unbiased[zindexa[zindexb.argsort()], rindexa[rindexb.argsort()]].reshape(shape)
+                return out_xi_unbiased, out_xi, out_dbarxi_dloga_unbiased, out_dbarxi_dloga
+            else:
+                return out_xi, out_dbarxi_dloga
+        else:
+            rind = np.arange(0, len(r_flat), 1, dtype=np.int)
+            out_xi = interp1d(self.__r_vals, self.__xi)(r_flat)[zindexa[zindexb.argsort()], rind].reshape(shape)
+            out_dbarxi_dloga = interp1d(self.__r_vals, self.__dbarxi_dloga)(r_flat)[zindexa[zindexb.argsort()], rind].reshape(shape)
+
+            if unbiased:
+                out_xi_unbiased = interp1d(self.__r_vals, self.__xi_unbiased)(r_flat)[zindexa[zindexb.argsort()], rind].reshape(shape)
+                out_dbarxi_dloga_unbiased = interp1d(self.__r_vals, self.__dbarxi_dloga_unbiased)(r_flat)[zindexa[zindexb.argsort()], rind].reshape(shape)
+                return out_xi_unbiased, out_xi, out_dbarxi_dloga_unbiased, out_dbarxi_dloga
+            else:
+                return out_xi, out_dbarxi_dloga
 
     def compute_xi(self, r, z, deriv=True, unbiased=False, old_bias=False):
         eval_vals, weights = self.__intHelper.get_points_weights()
