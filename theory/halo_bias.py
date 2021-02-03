@@ -103,11 +103,14 @@ class HaloBias(HaloBiasBase):
         if self._window_function == 'sharp_k':
             q1Bias[:, self._k_vals >= 1.0 / self.radius_of_mass(self._mMin)] = self.simple_bias(self._mMin, self._z_vals)[:, np.newaxis]
             q2Bias[:, self._k_vals >= 1.0 / self.radius_of_mass(self._mMin)] = self.simple_bias(self._mMin, self._z_vals)[:, np.newaxis]**2
-        else:
+        elif self._window_function == 'gaussian':
+            a, b = np.where(np.isnan(q1Bias) + np.isinf(q1Bias))  # get index of elements where bias is nan or infinity
+            q1Bias[a, b] = self.simple_bias(self._mMin, self._z_vals[a])  # replace nan elements with asymptotic limit
+            q2Bias[a, b] = self.simple_bias(self._mMin, self._z_vals[a])**2
+        elif self._window_function == 'top_hat':
             a,b = np.where(np.isnan(q1Bias) + np.isinf(q1Bias)) #get index of elements where bias is nan or infinity
-            r = q1Bias.shape[1] - ((~np.isnan(q1Bias)) * (~np.isinf(q1Bias)))[a, ::-1].argmax(1) - 1 #get index of last non-nan/non-inf element
-            q1Bias[a,b] = q1Bias[a,r] #replace nan elements with last non-nan element
-            q2Bias[a,b] = q2Bias[a,r]
+            q1Bias[a,b] = self._b_TH_assign_func(self._z_vals[a]) / self._n_TH_assign_func(self._z_vals[a]) #replace nan elements with asymptotic limit
+            q2Bias[a,b] = self._b_TH_assign_func(self._z_vals[a]) / self._n_TH_assign_func(self._z_vals[a])
 
         self.__q1Bias_vals = q1Bias
         self.__q2Bias_vals = q2Bias
