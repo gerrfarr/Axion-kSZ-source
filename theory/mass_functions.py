@@ -24,4 +24,6 @@ class PressSchechterMassFunction(MassFunction):
 
 class JenkinsMassFunction(MassFunction):
     def __call__(self, m, z):
-        raise NotImplementedError("This is not implemented yet!")
+        f = 0.315 * np.exp(-np.fabs(np.log(1 / self.sigmaInt(m, z)) + 0.61)**3.8)
+        vals = self.cosmo.rho_mean / m * f * np.fabs(self.sigmaInt.dlogSigma_dlogm(m, z))
+        return vals
