@@ -134,9 +134,9 @@ class Cosmology(object):
     def rho_mean(self):
         """
 
-        :return: mean matter density in solar masses per cubic Mpc
+        :return: mean matter density in units of h^{-1} M_sun/(h^{-1} Mpc)^3 = h^2 M_sun/Mpc^3
         """
-        return self.omegaM*self.h**2*self.RHO_C*self.Mpc_to_cm**3/self.m_sun
+        return self.omegaM*self.RHO_C*self.Mpc_to_cm**3/self.m_sun
 
     def E(self, z):
         return np.sqrt(self.__OmegaR * (1 + z)**4 + self.OmegaM * (1 + z)**3 + self.OmegaLambda + (1 - self.OmegaM - self.OmegaLambda) * (1 + z)**2)
@@ -147,6 +147,9 @@ class Cosmology(object):
 
     def __repr__(self):
         return "h={:.3f}, omega_cdm={:.3f}, omega_b={:.3f}, n_s={:.3f}, tau={:.3f}, log_1e10A_s={:.3f}, m_axion={:.3E}, omega_axion={:.3f}".format(self.__h, self.__omega_cdm, self.__omega_b, self.__n_s, self.__tau, self.log_1e10A_s, self.__m_axion, self.__omega_axion)
+
+    def __copy__(self):
+        return Cosmology.generate(m_axion=self.m_axion, omega_axion=self.omega_axion, h=self.h, omega_cdm=self.omegaCDM, omega_b=self.omegaB, n_s=self.n_s, A_s=self.A_s, read_H_from_file=False)
 
 class CosmologyCustomH(Cosmology):
     def __init__(self):
@@ -172,3 +175,6 @@ class CosmologyCustomH(Cosmology):
     @staticmethod
     def generate(m_axion=None, omega_axion=None, h=None, omega_cdm=None, omega_b=None, n_s=None, A_s=None, read_H_from_file=True):
         return Cosmology.generate(m_axion, omega_axion, h, omega_cdm, omega_b, n_s, A_s, read_H_from_file)
+
+    def __copy__(self):
+        return Cosmology.generate(m_axion=self.m_axion, omega_axion=self.omega_axion, h=self.h, omega_cdm=self.omegaCDM, omega_b=self.omegaB, n_s=self.n_s, A_s=self.A_s, read_H_from_file=True)
