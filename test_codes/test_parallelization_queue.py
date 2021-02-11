@@ -1,10 +1,13 @@
-import mpi4py as MPI
+from mpi4py import MPI
 import numpy as np
-import sys
-sys.path.append("/global/homes/g/gfarren/axion kSZ/")
-print(sys.path)
 
-from axion_kSZ_source.parallelization_helpers.parallelization_queue import ParallelizationQueue
+try:
+    from axion_kSZ_source.parallelization_helpers.parallelization_queue import ParallelizationQueue
+except Exception:
+    import sys
+    sys.path.append("/global/homes/g/gfarren/axion kSZ/")
+    from axion_kSZ_source.parallelization_helpers.parallelization_queue import ParallelizationQueue
+
 comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
@@ -17,6 +20,8 @@ if rank==0:
     f = lambda x: x**2
     x_vals = np.linspace(0, 100, 101)
     for x in x_vals:
-        p.add_job(f, (x,))
+        p.add_job(f, (x,), None)
 
-    print(p.run())
+    p.run()
+    
+    print(p.outputs)
