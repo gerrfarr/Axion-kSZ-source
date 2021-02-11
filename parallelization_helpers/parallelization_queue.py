@@ -1,5 +1,5 @@
 import numpy as np
-import mpi4py as MPI
+from mpi4py import MPI
 
 class ParallelizationQueue(object):
 

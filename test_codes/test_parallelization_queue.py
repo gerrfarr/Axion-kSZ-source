@@ -1,6 +1,6 @@
-import mpi4py as MPI
+from mpi4py import MPI
 import numpy as np
-from ..parallelization_helpers.parallelization_queue import ParallelizationQueue
+from .parallelization_helpers.parallelization_queue import ParallelizationQueue
 comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
