@@ -125,13 +125,13 @@ class HaloBias(HaloBiasBase):
 
             try:
                 if self._window_function == "top_hat":
-                    vals[k > self._kMax] = self._b_TH_assign_func(z[k < np.min(self._k_vals)]) / self._n_TH_assign_func(z[k < np.min(self._k_vals)])
+                    vals[k > self._kMax] = self._b_TH_assign_func(z[k > self._kMax]) / self._n_TH_assign_func(z[k > self._kMax])
                 elif self._window_function == "gaussian":
-                    vals[k > self._kMax] = self.simple_bias(self._mMin, z[k < np.min(self._k_vals)])
+                    vals[k > self._kMax] = self.simple_bias(self._mMin, z[k > self._kMax])
                 elif self._window_function == "sharp_k":
                     vals[k > self._kMax] = np.nan
 
-                vals[k < self._kMin] = self._bm_assign_func(z[k < np.min(self._k_vals)]) / self._m_assign_func(z[k < np.min(self._k_vals)])
+                vals[k < self._kMin] = self._bm_assign_func(z[k < np.min(self._k_vals)]) / self._m_assign_func(z[k < self._kMin])
 
             except (IndexError, TypeError):
                 if self._window_function == "top_hat":
@@ -146,9 +146,9 @@ class HaloBias(HaloBiasBase):
             vals = np.squeeze(self.__interpolator_q2.ev(np.log10(k), z))
             try:
                 if self._window_function == "top_hat":
-                    vals[k > self._kMax] = self._bsq_TH_assign_func(z[k < np.min(self._k_vals)]) / self._n_TH_assign_func(z[k < np.min(self._k_vals)])
+                    vals[k > self._kMax] = self._bsq_TH_assign_func(z[k > self._kMax]) / self._n_TH_assign_func(z[k > self._kMax])
                 elif self._window_function == "gaussian":
-                    vals[k > self._kMax] = self.simple_bias(self._mMin, z[k < np.min(self._k_vals)])**2
+                    vals[k > self._kMax] = self.simple_bias(self._mMin, z[k > self._kMax])**2
                 elif self._window_function == "sharp_k":
                     vals[k > self._kMax] = np.nan
 
