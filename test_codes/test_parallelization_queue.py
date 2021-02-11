@@ -1,6 +1,10 @@
 import mpi4py as MPI
 import numpy as np
-from ..parallelization_helpers.parallelization_queue import ParallelizationQueue
+import sys
+sys.path.append("/global/homes/g/gfarren/axion kSZ/")
+print(sys.path)
+
+from axion_kSZ_source.parallelization_helpers.parallelization_queue import ParallelizationQueue
 comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
