@@ -146,7 +146,7 @@ class Cosmology(object):
 
 
     def __repr__(self):
-        return "h={:.3f}, omega_cdm={:.3f}, omega_b={:.3f}, n_s={:.3f}, tau={:.3f}, log_1e10A_s={:.3f}, m_axion={:.3E}, omega_axion={:.3f}".format(self.__h, self.__omega_cdm, self.__omega_b, self.__n_s, self.__tau, self.log_1e10A_s, self.__m_axion, self.__omega_axion)
+        return "h={:.4f}, omega_cdm={:.4f}, omega_b={:.4f}, n_s={:.4f}, tau={:.4f}, log_1e10A_s={:4f}, m_axion={:.3E}, omega_axion={:.4f}".format(self.__h, self.__omega_cdm, self.__omega_b, self.__n_s, self.__tau, self.log_1e10A_s, self.__m_axion, self.__omega_axion)
 
     def __copy__(self):
         return Cosmology.generate(m_axion=self.m_axion, omega_axion=self.omega_axion, h=self.h, omega_cdm=self.omegaCDM, omega_b=self.omegaB, n_s=self.n_s, A_s=self.A_s, read_H_from_file=False)
