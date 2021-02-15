@@ -3,7 +3,6 @@ from mpi4py import MPI
 import axion_kSZ_source.parallelization_helpers.MPI_error_handler
 import dill
 
-QUEUE_IDS=[]
 MPI.pickle.__init__(dill.dumps,dill.loads)
 
 
@@ -13,9 +12,6 @@ class ParallelizationQueue(object):
         self.__comm = MPI.COMM_WORLD
         self.__size = self.__comm.Get_size()
         self.__rank = self.__comm.Get_rank()
-
-        self.__queue_id = len(QUEUE_IDS)
-        QUEUE_IDS.append(self.__queue_id)
 
         if self.__rank==0:
             self.__jobs = []
@@ -45,7 +41,6 @@ class ParallelizationQueue(object):
                 tmp.append(self.__jobs[id])
             jobs_chunked.append(tmp)
 
-        self.__notify_child_nodes()
         jobs = self.__comm.scatter(jobs_chunked, root=0)
 
         outputs = self.__run_jobs(jobs)
@@ -66,26 +61,11 @@ class ParallelizationQueue(object):
     def __run_child_node(self):
         assert(self.__rank!=0)
 
-        if not self.__comm.recv(source=0, tag=self.__queue_id):
-            return
-        else:
-            jobs = self.__comm.scatter(None, root=0)
-            outputs = self.__run_jobs(jobs)
-            outputs = self.__comm.gather(outputs, root=0)
+        jobs = self.__comm.scatter(None, root=0)
+        outputs = self.__run_jobs(jobs)
+        outputs = self.__comm.gather(outputs, root=0)
 
-            assert(outputs is None)
-
-    def __notify_child_nodes(self):
-        assert(self.__rank==0)
-
-        for i in range(1, self.__size):
-            self.__comm.send(True, dest=i, tag=self.__queue_id)
-
-    def __abort_child_nodes(self):
-        assert (self.__rank == 0)
-
-        for i in range(1, self.__size):
-            self.__comm.send(False, dest=i, tag=self.__queue_id)
+        assert(outputs is None)
 
     @staticmethod
     def __run_jobs(jobs):
