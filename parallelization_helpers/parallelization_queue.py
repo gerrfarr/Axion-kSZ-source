@@ -1,6 +1,8 @@
 import numpy as np
 from mpi4py import MPI
 
+QUEUE_IDS=[]
+
 class ParallelizationQueue(object):
 
     def __init__(self):
@@ -8,12 +10,14 @@ class ParallelizationQueue(object):
         self.__size = self.__comm.Get_size()
         self.__rank = self.__comm.Get_rank()
 
+        self.__queue_id = len(QUEUE_IDS)
+        QUEUE_IDS.append(self.__queue_id)
+
         if self.__rank==0:
             self.__jobs = []
             self.__outputs = None
         else:
-            self.run_child_node()
-
+            self.__run_child_node()
 
     def add_job(self, function, args, kwargs):
         assert(self.__rank == 0)
@@ -31,15 +35,16 @@ class ParallelizationQueue(object):
         job_ids_chunked = np.array_split(job_ids, self.__size)
 
         jobs_chunked = []
-        for ids in jobs_chunked:
+        for ids in job_ids_chunked:
             tmp=[]
             for id in ids:
                 tmp.append(self.__jobs[id])
             jobs_chunked.append(tmp)
 
+        self.__notify_child_nodes()
         jobs = self.__comm.scatter(jobs_chunked, root=0)
 
-        outputs = self.run_jobs(jobs)
+        outputs = self.__run_jobs(jobs)
         outputs = self.__comm.gather(outputs, root=0)
 
         self.__outputs = np.array(n_jobs, dtype=np.object)
@@ -47,22 +52,39 @@ class ParallelizationQueue(object):
             for j,id in enumerate(ids):
                 self.__outputs[ids] = outputs[i][j]
 
+        self.__jobs=[]
+
     @property
     def outputs(self):
         assert(self.__rank==0)
         return self.__outputs
 
-    def run_child_node(self):
+    def __run_child_node(self):
         assert(self.__rank!=0)
 
-        jobs = self.__comm.scatter(None, root=0)
-        outputs = self.run_jobs(jobs)
-        outputs = self.__comm.gather(outputs, root=0)
+        if not self.__comm.recv(source=0, tag=self.__queue_id):
+            return
+        else:
+            jobs = self.__comm.scatter(None, root=0)
+            outputs = self.__run_jobs(jobs)
+            outputs = self.__comm.gather(outputs, root=0)
 
-        assert(outputs is None)
+            assert(outputs is None)
+
+    def __notify_child_nodes(self):
+        assert(self.__rank==0)
+
+        for i in range(1, self.__size):
+            self.__comm.send(True, dest=i, tag=self.__queue_id)
+
+    def __abort_child_nodes(self):
+        assert (self.__rank == 0)
+
+        for i in range(1, self.__size):
+            self.__comm.send(False, dest=i, tag=self.__queue_id)
 
     @staticmethod
-    def run_jobs(jobs):
+    def __run_jobs(jobs):
         outputs = []
         for job in jobs:
             outputs.append(job[0](*job[1], **job[2]))
