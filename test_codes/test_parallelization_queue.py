@@ -41,7 +41,7 @@ def test_two():
         x_vals = np.linspace(0, 100, 101)
         for x in x_vals:
             p1.add_job(f, (x, cosmo), None)
-            p2.add_job(f, (x**2, cosmo), None)2
+            p2.add_job(f, (x**2, cosmo), None)
 
         p2.run()
         p1.run()
