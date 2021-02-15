@@ -19,7 +19,7 @@ class AxionCAMBWrapper(object):
         self.__fileroot = fileroot
         self.__log_path = log_path
 
-        from .axion_camb_config import param_file_path, axion_camb_path
+        from ..auxiliary.configs import param_file_path, axion_camb_path
         self.__camb_path = axion_camb_path
         self.__param_path = param_file_path
 
