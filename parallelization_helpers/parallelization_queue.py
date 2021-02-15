@@ -1,5 +1,9 @@
 import numpy as np
 from mpi4py import MPI
+import axion_kSZ_source.parallelization_helpers.MPI_error_handler
+import dill
+
+MPI.pickle.__init__(dill.dumps, dill.loads)
 
 QUEUE_IDS=[]
 
@@ -19,7 +23,7 @@ class ParallelizationQueue(object):
         else:
             self.__run_child_node()
 
-    def add_job(self, function, args, kwargs):
+    def add_job(self, function, args=None, kwargs=None):
         assert(self.__rank == 0)
 
         self.__jobs.append((function, args, kwargs))
@@ -47,10 +51,10 @@ class ParallelizationQueue(object):
         outputs = self.__run_jobs(jobs)
         outputs = self.__comm.gather(outputs, root=0)
 
-        self.__outputs = np.array(n_jobs, dtype=np.object)
-        for i,ids in enumerate(jobs_chunked):
+        self.__outputs = np.empty(n_jobs, dtype=np.object)
+        for i,ids in enumerate(job_ids_chunked):
             for j,id in enumerate(ids):
-                self.__outputs[ids] = outputs[i][j]
+                self.__outputs[id] = outputs[i][j]
 
         self.__jobs=[]
 
@@ -87,5 +91,12 @@ class ParallelizationQueue(object):
     def __run_jobs(jobs):
         outputs = []
         for job in jobs:
-            outputs.append(job[0](*job[1], **job[2]))
+            if job[1] is not None and job[2] is not None:
+                outputs.append(job[0](*job[1], **job[2]))
+            elif job[1] is not None:
+                outputs.append(job[0](*job[1]))
+            elif job[2] is not None:
+                outputs.append(job[0](**job[2]))
+            else:
+                outputs.append(job[0]())
         return outputs
