@@ -7,6 +7,8 @@ Gerrit Farren
 import time
 import numpy as np
 from ..auxiliary.differentiation_helpers import DifferentiationHelper
+from ..parallelization_helpers.parallelization_queue import ParallelizationQueue
+from ..auxiliary.cosmo_db import CosmoDB
 import copy
 
 class ParamDerivatives(object):
@@ -14,11 +16,17 @@ class ParamDerivatives(object):
     Class to compute derivatives with respect to a given parameter
 
     """
-    def __init__(self, fiducial_params, param_name, param_vals, eval_function, *function_args, pre_computation_function=None, stencil=None, has_to_precompute=True, verbose=False, **function_kwargs):
+    def __init__(self, cosmoDB, fiducial_params, param_name, param_vals, eval_function, eval_function_args=(), eval_function_kwargs={}, pre_computation_function=None, has_to_precompute=True, pre_function_args=(), pre_function_kwargs={}, eval_queue=None, pre_compute_queue=None, stencil=None):
         """
 
         Parameters
         ----------
+        cosmoDB : CosmoDB
+            database to hold all CAMB runs
+        pre_compute_queue : ParallelizationQueue
+           ParallizationQueue to execute all pre-computation actions
+        eval_queue : ParallelizationQueue
+            ParallizationQueue to execute all evaluation actions
         fiducial_params : object
             class containing fiducial parameters
         param_name : str
@@ -27,11 +35,15 @@ class ParamDerivatives(object):
             parameter values at which to evaluate function
         eval_function : (object, *args, **kwargs) -> array_like
             the function of which to take the derivative with respect to parameter `param_name`
-        function_args : dict
+        eval_function_args : tuple
             arguments passed to `eval_function`
-        function_kwargs : dict
+        eval_function_kwargs : dict
             keyword arguments passed to `eval_function`
-        pre_computation_function: (object)
+        pre_function_args : tuple
+            arguments passed to `pre_computation_function`
+        pre_function_kwargs : dict
+            keyword arguments passed to `pre_computation_function`
+        pre_computation_function : (object, string, string , *args, **kwargs) -> None
             function to execute for every parameter set before taking derivatives
         has_to_precompute: bool
             whether to execute pre_computation_function newly for every new parameter set
@@ -41,11 +53,20 @@ class ParamDerivatives(object):
         self.__param_name = param_name
         self.__param_vals = param_vals
         self.__eval_function = eval_function
+        self.__eval_queue = eval_queue
         self.__pre_computation_function = pre_computation_function
         self.__has_to_precompute = has_to_precompute
-        self.__verbose = verbose
-        self.__args = function_args
-        self.__kwargs = function_kwargs
+        self.__pre_compute_queue = pre_compute_queue
+        if has_to_precompute:
+            assert(self.__pre_computation_function is not None)
+
+        self.__cosmoDB = cosmoDB
+
+        self.__eval_args = eval_function_args
+        self.__eval_kwargs = eval_function_kwargs
+
+        self.__pre_args = pre_function_args
+        self.__pre_kwargs = pre_function_kwargs
 
         self.__fiducial_value = getattr(self.__fiducial, self.__param_name)
         self.__step_size = self.__param_vals[1] - self.__param_vals[0]
@@ -56,32 +77,28 @@ class ParamDerivatives(object):
 
         self.__parameter_sets = None
         self.__evals = None
+        self.__queue_ids_precompute = None
+        self.__queue_ids_evals = None
         self.__derivs = None
 
-    def __call__(self):
-        """
-        Computes and provides the derivatives of the input function with respect to the given parameter
+    def prep1(self):
+        self.__parameter_sets = self.__get_parameter_sets()
 
-        Returns
-        -------
-        array_like
-            Derivatives
-        """
-        if self.__derivs is None:
-            start_copy = time.time()
-            self.__parameter_sets = self.__get_parameter_sets()
-            if self.__verbose:
-                print("It took {:.3f}s to create cosmo copies".format(time.time()-start_copy))
-            start_evaluate = time.time()
+    def prep2(self):
+        if self.__eval_queue is None:
             self.__evals = self.__evaluate()
-            if self.__verbose:
-                print("It took {:.3f}s to evaluate the input function".format(time.time() - start_evaluate))
-            start_derivs=time.time()
-            self.__derivs = self.__get_derivatives()
-            if self.__verbose:
-                print("It took {:.3f}s to generate derivatives".format(time.time() - start_derivs))
+        else:
+            self.__queue_ids_evals = self.__evaluate()
 
+    def derivs(self):
+        if self.__evals is None and self.__queue_ids_evals is not None:
+            self.__evals = self.__eval_queue.outputs[self.__queue_ids_evals]
+        elif self.__evals is None and self.__queue_ids_evals is None:
+            raise Exception("Something went wrong with the evaluation!")
+
+        self.__derivs = self.__get_derivatives()
         return self.__derivs
+
 
     def __get_parameter_sets(self):
         """
@@ -97,13 +114,23 @@ class ParamDerivatives(object):
                 val = self.__param_vals[i]
                 if val == self.__fiducial_value:
                     params.append(self.__fiducial)
-                    if self.__has_to_precompute:
-                        self.__pre_computation_function(self.__fiducial)
+                    id, ran_TF, success_TF, out_path, log_path = self.__cosmoDB.add(self.__fiducial)
+                    if self.__has_to_precompute and not ran_TF:
+                        if self.__pre_compute_queue is None:
+                            self.__pre_computation_function(self.__fiducial, out_path, log_path, *self.__pre_args, **self.__pre_kwargs)
+                        else:
+                            self.__queue_ids_precompute.append(self.__pre_compute_queue.add_job(self.__pre_computation_function, (self.__fiducial, out_path, log_path, *self.__pre_args), self.__pre_kwargs))
+
                 else:
                     new_cosmo = copy.copy(self.__fiducial)
                     setattr(new_cosmo, self.__param_name, val)
-                    if self.__has_to_precompute:
-                        self.__pre_computation_function(self.__fiducial)
+                    id, ran_TF, success_TF, out_path, log_path = self.__cosmoDB.add(new_cosmo)
+                    if self.__has_to_precompute and not ran_TF:
+                        if self.__pre_compute_queue is None:
+                            self.__pre_computation_function(new_cosmo, out_path, log_path, *self.__pre_args, **self.__pre_kwargs)
+                        else:
+                            self.__queue_ids_precompute.append(self.__pre_compute_queue.add_job(self.__pre_computation_function, (new_cosmo, out_path, log_path, *self.__pre_args), self.__pre_kwargs))
+
                     params.append(new_cosmo)
             else:
                 params.append(None)
@@ -119,13 +146,21 @@ class ParamDerivatives(object):
             List with outputs from the input function
         """
         values = []
+        queue_ids = []
         for i in range(len(self.__parameter_sets)):
             if self.__coefficients[i]!=0:
                 cosmo = self.__parameter_sets[i]
-                vals = self.__eval_function(cosmo, *self.__args, **self.__kwargs)
-                values.append(vals)
+                id, ran_TF, success_TF, out_path, log_path = self.__cosmoDB.get_by_cosmo(cosmo)
+                if self.__eval_queue is None:
+                    vals = self.__eval_function(cosmo, out_path, log_path, *self.__eval_args, **self.__eval_kwargs)
+                    values.append(vals)
+                else:
+                    queue_ids.append(self.__eval_queue.add_job(self.__eval_function, (cosmo, out_path, log_path, *self.__eval_args,), self.__eval_kwargs))
 
-        return values
+        if self.__eval_queue is None:
+            return values
+        else:
+            return queue_ids
 
     def __get_derivatives(self):
         """

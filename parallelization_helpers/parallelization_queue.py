@@ -51,6 +51,7 @@ class ParallelizationQueue(object):
             for j,id in enumerate(ids):
                 self.__outputs[id] = outputs[i][j]
 
+        self.__outputs = np.array(self.__outputs)
         self.__jobs=[]
 
     @property
