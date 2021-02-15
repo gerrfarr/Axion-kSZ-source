@@ -4,6 +4,8 @@ import axion_kSZ_source.parallelization_helpers.MPI_error_handler
 import dill
 
 QUEUE_IDS=[]
+MPI.pickle.__init__(dill.dumps,dill.loads)
+
 
 class ParallelizationQueue(object):
 
