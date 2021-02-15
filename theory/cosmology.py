@@ -64,11 +64,11 @@ class Cosmology(object):
 
     @property
     def OmegaM(self):
-        return (self.__omega_b+self.__omega_cdm)/self.__h**2
+        return (self.__omega_b+self.__omega_cdm+self.__omega_axion)/self.__h**2
 
     @property
     def omegaM(self):
-        return self.__omega_b+self.__omega_cdm
+        return self.__omega_b+self.__omega_cdm+self.__omega_axion
 
     @property
     def OmegaB(self):
@@ -78,6 +78,10 @@ class Cosmology(object):
     def omegaB(self):
         return self.__omega_b
 
+    @omegaB.setter
+    def omegaB(self, new):
+        self.__omega_b = new
+
     @property
     def OmegaCDM(self):
         return self.__omega_cdm / self.__h**2
@@ -85,6 +89,10 @@ class Cosmology(object):
     @property
     def omegaCDM(self):
         return self.__omega_cdm
+
+    @omegaCDM.setter
+    def omegaCDM(self, new):
+        self.__omega_cdm = new
 
     @property
     def OmegaLambda(self):
@@ -94,13 +102,25 @@ class Cosmology(object):
     def H0(self):
         return 100.0*self.__h
 
+    @H0.setter
+    def H0(self, new):
+        self.__h = new/100.0
+
     @property
     def h(self):
         return self.__h
 
+    @h.setter
+    def h(self, new):
+        self.__h=new
+
     @property
     def n_s(self):
         return self.__n_s
+
+    @n_s.setter
+    def n_s(self, new):
+        self.__n_s = new
 
     @property
     def tau(self):
@@ -110,17 +130,42 @@ class Cosmology(object):
     def A_s(self):
         return self.__A_s
 
+    @A_s.setter
+    def A_s(self, new):
+        self.__A_s = new
+
     @property
     def log_1e10A_s(self):
         return np.log(1.0e10*self.__A_s)
+
+    @log_1e10A_s.setter
+    def log_1e10A_s(self, new):
+        self.__A_s = np.exp(new)/1.0e10
 
     @property
     def m_axion(self):
         return self.__m_axion
 
+    @m_axion.setter
+    def m_axion(self, new):
+        self.__m_axion = new
+
     @property
     def omega_axion(self):
         return self.__omega_axion
+
+    @omega_axion.setter
+    def omega_axion(self, new):
+        self.__omega_axion = new
+
+    @property
+    def axion_frac(self):
+        return self.omega_axion/self.omegaM
+
+    @axion_frac.setter
+    def axion_frac(self, new):
+        self.__omega_axion = self.omegaM*new
+        self.__omega_cdm = self.omegaM*(1-new)
 
     @property
     def rho_crit(self):
@@ -165,7 +210,7 @@ class CosmologyCustomH(Cosmology):
 
     def H(self, z):
         try:
-            return self.__H_interp(z)*3000.0*100
+            return self.__H_interp(z)*3000.0*100.0
         except TypeError:
             raise Exception("Interpolation of H is not defined. Set H first using function set_H_interpolation(H_interp)")
 
