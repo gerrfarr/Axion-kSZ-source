@@ -29,4 +29,22 @@ def test_one():
 
         p.run()
 
-        assert(p.outputs == x_vasl**2*cosmo.h)
+        assert(p.outputs == x_vals**2*cosmo.h)
+
+def test_two():
+    p1=ParallelizationQueue()
+    p2=ParallelizationQueue()
+
+    if rank==0:
+        cosmo = Cosmology()
+        f = lambda x, c: x**2 * c.h
+        x_vals = np.linspace(0, 100, 101)
+        for x in x_vals:
+            p1.add_job(f, (x, cosmo), None)
+            p2.add_job(f, (x**2, cosmo), None)2
+
+        p2.run()
+        p1.run()
+
+        assert (p1.outputs == x_vals**2 * cosmo.h)
+        assert (p2.outputs == x_vals**4 * cosmo.h)
