@@ -46,5 +46,10 @@ def test_two():
         p2.run()
         p1.run()
 
+        print(p1.outputs, p2.outputs)
+
         assert (p1.outputs == x_vals**2 * cosmo.h)
         assert (p2.outputs == x_vals**4 * cosmo.h)
+
+test_one()
+test_two()
