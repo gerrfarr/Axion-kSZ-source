@@ -29,7 +29,7 @@ def test_one():
 
         p.run()
 
-        assert(p.outputs == x_vals**2*cosmo.h)
+        assert(np.all(p.outputs == x_vals**2*cosmo.h))
 
 def test_two():
     p1=ParallelizationQueue()
@@ -48,8 +48,8 @@ def test_two():
 
         print(p1.outputs, p2.outputs)
 
-        assert (p1.outputs == x_vals**2 * cosmo.h)
-        assert (p2.outputs == x_vals**4 * cosmo.h)
+        assert (np.all(p1.outputs == x_vals**2 * cosmo.h))
+        assert (np.all(p2.outputs == x_vals**4 * cosmo.h))
 
 test_one()
 test_two()
