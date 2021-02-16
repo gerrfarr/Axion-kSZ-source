@@ -59,6 +59,11 @@ class ParallelizationQueue(object):
         assert(self.__rank==0)
         return self.__outputs
 
+    @property
+    def jobs(self):
+        assert (self.__rank == 0)
+        return self.__jobs
+
     def __run_child_node(self):
         assert(self.__rank!=0)
 

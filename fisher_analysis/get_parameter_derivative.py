@@ -85,6 +85,10 @@ class ParamDerivatives(object):
         self.__parameter_sets = self.__get_parameter_sets()
 
     def prep2(self):
+        if self.__pre_compute_queue is not None:
+            for db_id,queue_id in enumerate(self.__queue_ids_precompute):
+                self.__cosmoDB.set_run(db_id, self.__pre_compute_queue.outputs[queue_id])
+
         if self.__eval_queue is None:
             self.__evals = self.__evaluate()
         else:
@@ -118,9 +122,10 @@ class ParamDerivatives(object):
                     id, ran_TF, success_TF, out_path, log_path = self.__cosmoDB.add(self.__fiducial)
                     if self.__has_to_precompute and not ran_TF:
                         if self.__pre_compute_queue is None:
-                            self.__pre_computation_function(self.__fiducial, out_path, log_path, *self.__pre_args, **self.__pre_kwargs)
+                            success = self.__pre_computation_function(self.__fiducial, out_path, log_path, *self.__pre_args, **self.__pre_kwargs)
+                            self.__cosmoDB.set_run(id, success)
                         else:
-                            queue_ids.append(self.__pre_compute_queue.add_job(self.__pre_computation_function, (self.__fiducial, out_path, log_path, *self.__pre_args), self.__pre_kwargs))
+                            queue_ids.append((id,self.__pre_compute_queue.add_job(self.__pre_computation_function, (self.__fiducial, out_path, log_path, *self.__pre_args), self.__pre_kwargs)))
 
                 else:
                     new_cosmo = copy.copy(self.__fiducial)
@@ -128,9 +133,10 @@ class ParamDerivatives(object):
                     id, ran_TF, success_TF, out_path, log_path = self.__cosmoDB.add(new_cosmo)
                     if self.__has_to_precompute and not ran_TF:
                         if self.__pre_compute_queue is None:
-                            self.__pre_computation_function(new_cosmo, out_path, log_path, *self.__pre_args, **self.__pre_kwargs)
+                            success = self.__pre_computation_function(new_cosmo, out_path, log_path, *self.__pre_args, **self.__pre_kwargs)
+                            self.__cosmoDB.set_run(id, success)
                         else:
-                            queue_ids.append(self.__pre_compute_queue.add_job(self.__pre_computation_function, (new_cosmo, out_path, log_path, *self.__pre_args), self.__pre_kwargs))
+                            queue_ids.append((id,self.__pre_compute_queue.add_job(self.__pre_computation_function, (new_cosmo, out_path, log_path, *self.__pre_args), self.__pre_kwargs)))
 
                     params.append(new_cosmo)
             else:
