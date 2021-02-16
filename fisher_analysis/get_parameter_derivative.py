@@ -109,6 +109,7 @@ class ParamDerivatives(object):
             List with generated parameter sets
         """
         params = []
+        queue_ids = []
         for i in range(len(self.__param_vals)):
             if self.__coefficients[i]!=0:
                 val = self.__param_vals[i]
@@ -119,7 +120,7 @@ class ParamDerivatives(object):
                         if self.__pre_compute_queue is None:
                             self.__pre_computation_function(self.__fiducial, out_path, log_path, *self.__pre_args, **self.__pre_kwargs)
                         else:
-                            self.__queue_ids_precompute.append(self.__pre_compute_queue.add_job(self.__pre_computation_function, (self.__fiducial, out_path, log_path, *self.__pre_args), self.__pre_kwargs))
+                            queue_ids.append(self.__pre_compute_queue.add_job(self.__pre_computation_function, (self.__fiducial, out_path, log_path, *self.__pre_args), self.__pre_kwargs))
 
                 else:
                     new_cosmo = copy.copy(self.__fiducial)
@@ -129,12 +130,13 @@ class ParamDerivatives(object):
                         if self.__pre_compute_queue is None:
                             self.__pre_computation_function(new_cosmo, out_path, log_path, *self.__pre_args, **self.__pre_kwargs)
                         else:
-                            self.__queue_ids_precompute.append(self.__pre_compute_queue.add_job(self.__pre_computation_function, (new_cosmo, out_path, log_path, *self.__pre_args), self.__pre_kwargs))
+                            queue_ids.append(self.__pre_compute_queue.add_job(self.__pre_computation_function, (new_cosmo, out_path, log_path, *self.__pre_args), self.__pre_kwargs))
 
                     params.append(new_cosmo)
             else:
                 params.append(None)
 
+        self.__queue_ids_precompute = queue_ids
         return params
 
     def __evaluate(self):
