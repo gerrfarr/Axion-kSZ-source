@@ -42,8 +42,8 @@ class CosmoDB(object):
         return db_entry.name, db_entry['ran_TF'], db_entry['successful_TF'], db_entry['path_root'], db_entry['logs_path']
 
     def set_run(self, ID, success):
-        self.__db['ran_TF'][ID] = True
-        self.__db['successful_TF'][ID] = success
+        self.__db.loc[ID,'ran_TF'] = True
+        self.__db.loc[ID,'successful_TF'] = success
 
     def set_run_by_cosmo(self, cosmo, success):
         id, ran_TF, success_TF, out_path, log_path = self.get_by_cosmo(cosmo)
