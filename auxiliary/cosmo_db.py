@@ -11,6 +11,7 @@ class CosmoDB(object):
         columns = ['ID', 'path_root', 'logs_path', 'hash_value', 'ran_TF', 'successful_TF', 'h', 'omegaCDM', 'omegaB', 'omega_axion', 'm_axion', 'n_s', 'A_s', 'read_H']
         try:
             self.load()
+            self.__db = self.__db.set_index('ID')
         except FileNotFoundError:
             dict = {}
             for c in columns:
