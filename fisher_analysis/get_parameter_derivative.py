@@ -86,7 +86,7 @@ class ParamDerivatives(object):
 
     def prep2(self):
         if self.__pre_compute_queue is not None:
-            for db_id,queue_id in enumerate(self.__queue_ids_precompute):
+            for db_id,queue_id in self.__queue_ids_precompute:
                 self.__cosmoDB.set_run(db_id, self.__pre_compute_queue.outputs[queue_id])
 
         if self.__eval_queue is None:
