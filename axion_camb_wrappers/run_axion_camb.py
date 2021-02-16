@@ -35,7 +35,7 @@ class AxionCAMBWrapper(object):
             command_line = self.__camb_path.replace(" ", "\ ")+" "+self.__param_path.replace(" ", "\ ")+" 1 {} 2 {} 3 {} 4 {} 5 {} 6 {} 7 {} 8 T 9 {} > {}".format(cosmo.omegaB, cosmo.omegaCDM, cosmo.omega_axion, cosmo.m_axion, cosmo.H0, cosmo.n_s, cosmo.A_s, self.__fileroot.replace(" ", "\ "), self.__log_path.replace(" ", "\ "))
 
             try:
-                p = subprocess.run(shlex.split(command_line))
+                p = subprocess.run(command_line, shell=True)
                 if p.returncode != 0:
                     raise Exception("Subprocess finished with return code {}".format(p.returncode))
             except Exception as ex:
