@@ -32,7 +32,7 @@ class AxionCAMBWrapper(object):
 
         success=True
         with open(self.__log_path, "a+", buffering=1) as log_file:
-            command_line = self.__camb_path+" "+self.__param_path+" 1 {} 2 {} 3 {} 4 {} 5 {} 6 {} 7 {} 8 T 9 {} > {}".format(cosmo.omegaB, cosmo.omegaCDM, cosmo.omega_axion, cosmo.m_axion, cosmo.H0, cosmo.n_s, cosmo.A_s, self.__fileroot, self.__log_path)
+            command_line = self.__camb_path+" "+self.__param_path+" 1 {} 2 {} 3 {} 4 {} 5 {} 6 {} 7 {} 8 T 9 {} > {}".format(cosmo.omegaB, cosmo.omegaCDM, cosmo.omega_axion, cosmo.m_axion, cosmo.H0, cosmo.n_s, cosmo.A_s, self.__fileroot.replace(" ", "\ "), self.__log_path.replace(" ", "\ "))
 
             try:
                 subprocess.call(command_line, shell=True)
