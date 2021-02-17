@@ -83,6 +83,10 @@ class Cosmology(object):
         self.__omega_b = new
 
     @property
+    def omegaDM(self):
+        return self.omegaM-self.omegaB
+
+    @property
     def OmegaCDM(self):
         return self.__omega_cdm / self.__h**2
 
@@ -160,12 +164,12 @@ class Cosmology(object):
 
     @property
     def axion_frac(self):
-        return self.omega_axion/self.omegaM
+        return self.omega_axion/self.omegaDM
 
     @axion_frac.setter
     def axion_frac(self, new):
-        self.__omega_axion = self.omegaM*new
-        self.__omega_cdm = self.omegaM*(1-new)
+        self.__omega_axion = self.omegaDM*new
+        self.__omega_cdm = self.omegaDM*(1-new)
 
     @property
     def rho_crit(self):
