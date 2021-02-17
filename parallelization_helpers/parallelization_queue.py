@@ -52,7 +52,6 @@ class ParallelizationQueue(object):
                 self.__outputs[id] = outputs[i][j]
 
         self.__outputs = np.array(self.__outputs)
-        self.__jobs=[]
 
     @property
     def outputs(self):
