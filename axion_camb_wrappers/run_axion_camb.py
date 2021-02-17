@@ -5,6 +5,7 @@ import os
 from .hubble_interpolation import HubbleInterpolation
 from .power_interpolation import LinearPowerInterpolation
 from .growth_interpolation import GrowthInterpolation
+import time
 
 class AxionCAMBWrapper(object):
     camb_files=["_params.ini", "_evolution.dat", "_devolution.dat", "_a_vals.dat", "_matterpower_out.dat", "_transfer_out.dat"]
@@ -35,9 +36,11 @@ class AxionCAMBWrapper(object):
             command_line = self.__camb_path.replace(" ", "\ ")+" "+self.__param_path.replace(" ", "\ ")+" 1 {} 2 {} 3 {} 4 {} 5 {} 6 {} 7 {} 8 T 9 {} > {}".format(cosmo.omegaB, cosmo.omegaCDM, cosmo.omega_axion, cosmo.m_axion, cosmo.H0, cosmo.n_s, cosmo.A_s, self.__fileroot.replace(" ", "\ "), self.__log_path.replace(" ", "\ "))
 
             try:
+                start = time.time()
                 p = subprocess.run(command_line, shell=True)
                 if p.returncode != 0:
                     raise Exception("Subprocess finished with return code {}".format(p.returncode))
+                log_file.write("CAMB took {:.2f}s to compute\n".format(time.time()-start))
             except Exception as ex:
                 log_file.write("CAMB failed with message: "+str(ex)+"\n")
                 success=False

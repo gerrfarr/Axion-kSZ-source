@@ -52,9 +52,6 @@ if rank==0:
         k_vals = np.logspace(-2,2, 100)
         return lin_power(k_vals)
 
-
-
-
     ds = ParamDerivatives(cosmoDB, cosmo, 'h', param_vals, eval_function, eval_function_args=(), eval_function_kwargs={}, pre_computation_function=pre_compute_function, has_to_precompute=True, pre_function_args=(), pre_function_kwargs={}, eval_queue=p_evaluate, pre_compute_queue=p_pre_compute, stencil=stencil)
     ds.prep1()
     p_pre_compute.run()
