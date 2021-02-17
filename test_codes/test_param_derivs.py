@@ -24,39 +24,43 @@ print(f"This is rank {rank}")
 p_pre_compute=ParallelizationQueue()
 p_evaluate=ParallelizationQueue()
 
+if rank==0:
 
-stencil = [-1,0,1]
-cosmo = Cosmology()
-step_size = cosmo.A_s*0.01
-param_vals = cosmo.A_s+stencil*step_size
+    stencil = np.array([-2,-1,0,1,2])
+    cosmo = Cosmology.generate(omega_axion=1e-6)
+    step_size = cosmo.h*0.01
+    param_vals = cosmo.h+stencil*step_size
 
-cosmoDB= CosmoDB()
+    cosmoDB= CosmoDB()
 
-def pre_compute_function(cosmo, out_path, log_path):
-    file_root = os.path.basename(out_path)
-    root_path = out_path[:-len(file_root)]
+    def pre_compute_function(cosmo, out_path, log_path):
+        file_root = os.path.basename(out_path)
+        root_path = out_path[:-len(file_root)]
+        print(root_path, file_root, log_path)
 
-    wrapper = AxionCAMBWrapper(root_path, file_root, log_path)
-    success = wrapper(cosmo)
+        wrapper = AxionCAMBWrapper(root_path, file_root, log_path)
+        success = wrapper(cosmo)
 
-    return success
+        return success
 
-def eval_function(cosmo, out_path, log_path):
-    file_root = os.path.basename(out_path)
-    root_path = out_path[:-len(file_root)]
-    wrapper = AxionCAMBWrapper(root_path, file_root, log_path)
+    def eval_function(cosmo, out_path, log_path):
+        file_root = os.path.basename(out_path)
+        root_path = out_path[:-len(file_root)]
+        wrapper = AxionCAMBWrapper(root_path, file_root, log_path)
 
-    lin_power = wrapper.get_linear_power()
-    k_vals = np.logspace(-2,2, 100)
-    return lin_power(k_vals)
-
-
+        lin_power = wrapper.get_linear_power()
+        k_vals = np.logspace(-2,2, 100)
+        return lin_power(k_vals)
 
 
-ds = ParamDerivatives(cosmoDB, cosmo, 'A_s', param_vals, eval_function, eval_function_args=(), eval_function_kwargs={}, pre_computation_function=pre_compute_function, has_to_precompute=True, pre_function_args=(), pre_function_kwargs={}, eval_queue=p_evaluate, pre_compute_queue=p_pre_compute, stencil=stencil)
-ds.prep1()
-p_pre_compute.run()
-ds.prep2()
-p_evaluate.run()
-np.savetxt("./test_derivs.dat", ds.derivs())
+
+
+    ds = ParamDerivatives(cosmoDB, cosmo, 'h', param_vals, eval_function, eval_function_args=(), eval_function_kwargs={}, pre_computation_function=pre_compute_function, has_to_precompute=True, pre_function_args=(), pre_function_kwargs={}, eval_queue=p_evaluate, pre_compute_queue=p_pre_compute, stencil=stencil)
+    ds.prep1()
+    p_pre_compute.run()
+    ds.prep2()
+    p_evaluate.run()
+    np.savetxt("./test_derivs.dat", ds.derivs())
+    
+    cosmoDB.save()
 
