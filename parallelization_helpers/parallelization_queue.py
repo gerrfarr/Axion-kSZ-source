@@ -19,7 +19,7 @@ class ParallelizationQueue(object):
         else:
             self.__run_child_node()
 
-    def add_job(self, function, args=None, kwargs=None):
+    def add_job(self, function, *args, **kwargs):
         assert(self.__rank == 0)
 
         self.__jobs.append((function, args, kwargs))
@@ -77,12 +77,5 @@ class ParallelizationQueue(object):
     def __run_jobs(jobs):
         outputs = []
         for job in jobs:
-            if job[1] is not None and job[2] is not None:
-                outputs.append(job[0](*job[1], **job[2]))
-            elif job[1] is not None:
-                outputs.append(job[0](*job[1]))
-            elif job[2] is not None:
-                outputs.append(job[0](**job[2]))
-            else:
-                outputs.append(job[0]())
+            outputs.append(job[0](*job[1], **job[2]))
         return outputs

@@ -30,8 +30,9 @@ class CosmoDB(object):
 
         :type cosmo: Cosmology
         """
-        if np.any(generate_cosmo_identifier(cosmo) == self.__db['hash_value']):
-            db_entry = self.__db.loc[generate_cosmo_identifier(cosmo) == self.__db['hash_value']].iloc[0]
+        exists = self.get_by_cosmo(cosmo)
+        if exists:
+            return (False, *exists)
         else:
 
             logs_path = camb_outputs_path+"logs/camb_log_ID={}.log".format(len(self.__db))
@@ -39,7 +40,7 @@ class CosmoDB(object):
             self.__db.loc[len(self.__db)] = {'path_root': output_path,'logs_path': logs_path, 'hash_value': generate_cosmo_identifier(cosmo), 'ran_TF': False, 'successful_TF': False, 'h': cosmo.h, 'omegaCDM': cosmo.omegaCDM, 'omegaB': cosmo.omegaB, 'omega_axion': cosmo.omega_axion, 'm_axion': cosmo.m_axion, 'n_s': cosmo.n_s, 'A_s': cosmo.A_s, 'read_H': (type(cosmo) == CosmologyCustomH) }
             db_entry = self.__db.iloc[-1]
 
-        return db_entry.name, db_entry['ran_TF'], db_entry['successful_TF'], db_entry['path_root'], db_entry['logs_path']
+            return True, db_entry.name, db_entry['ran_TF'], db_entry['successful_TF'], db_entry['path_root'], db_entry['logs_path']
 
     def set_run(self, ID, success):
         self.__db.loc[ID,'ran_TF'] = True
