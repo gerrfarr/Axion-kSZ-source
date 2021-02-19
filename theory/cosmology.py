@@ -33,7 +33,7 @@ class Cosmology(object):
         self.__omega_axion=0.0
 
     @staticmethod
-    def generate(m_axion=None, omega_axion=None, h=None, omega_cdm=None, omega_b=None, n_s=None, A_s=None, read_H_from_file=False):
+    def generate(m_axion=None, omega_axion=None, axion_frac=None, h=None, omega_cdm=None, omega_b=None, n_s=None, A_s=None, read_H_from_file=False):
         if not read_H_from_file:
             cos = Cosmology()
         else:
@@ -57,8 +57,13 @@ class Cosmology(object):
         if m_axion is not None:
             cos.__m_axion = m_axion
 
-        if omega_axion is not None:
+        if omega_axion is not None and axion_frac is None:
             cos.__omega_axion = omega_axion
+        elif axion_frac is not None:
+            cos.axion_frac=axion_frac
+        elif omega_axion is not None and axion_frac is not None:
+            raise Exception("Can not simultaneously specify omega_axion and axion_frac.")
+
 
         return cos
 
