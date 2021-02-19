@@ -17,13 +17,19 @@ class ParallelizationQueue(object):
             self.__jobs = []
             self.__outputs = None
         else:
-            self.__run_child_node()
+            self.run_child_node()
 
     def add_job(self, function, *args, **kwargs):
         assert(self.__rank == 0)
 
         self.__jobs.append((function, args, kwargs))
         return len(self.__jobs)-1
+
+    def clear(self):
+        assert(self.__rank == 0)
+
+        self.__jobs = []
+        self.__outputs = None
 
     def run(self):
         assert(self.__rank==0)
@@ -53,6 +59,15 @@ class ParallelizationQueue(object):
 
         self.__outputs = np.array(self.__outputs)
 
+    def run_child_node(self):
+        assert(self.__rank!=0)
+
+        jobs = self.__comm.scatter(None, root=0)
+        outputs = self.__run_jobs(jobs)
+        outputs = self.__comm.gather(outputs, root=0)
+
+        assert(outputs is None)
+
     @property
     def outputs(self):
         assert(self.__rank==0)
@@ -62,15 +77,6 @@ class ParallelizationQueue(object):
     def jobs(self):
         assert (self.__rank == 0)
         return self.__jobs
-
-    def __run_child_node(self):
-        assert(self.__rank!=0)
-
-        jobs = self.__comm.scatter(None, root=0)
-        outputs = self.__run_jobs(jobs)
-        outputs = self.__comm.gather(outputs, root=0)
-
-        assert(outputs is None)
 
     @staticmethod
     def __run_jobs(jobs):
