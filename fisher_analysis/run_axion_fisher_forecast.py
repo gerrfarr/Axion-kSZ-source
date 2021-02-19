@@ -37,10 +37,10 @@ if rank==0:
 
     axion_abundances = [1.0e-2]#np.array([1.0e-04, 1.6e-04, 2.5e-04, 4.0e-04, 6.3e-04, 1.0e-03, 1.6e-03, 2.5e-03, 4.0e-03, 6.3e-03, 1.0e-02, 1.6e-02, 2.5e-02, 4.0e-02, 5.3e-02, 6.3e-02, 1.0e-01, 1.1e-01, 1.6e-01, 2.1e-01, 2.5e-01, 2.6e-01, 3.2e-01, 3.7e-01, 4.0e-01, 4.2e-01, 4.7e-01, 5.3e-01, 5.8e-01, 6.3e-01, 6.8e-01, 7.4e-01, 7.9e-01, 8.4e-01, 8.9e-01, 9.5e-01])
 
-    axion_abundance_fractional_step_sizes = np.array([0.005, 0.01, 0.05, 0.1, 0.2, 0.4])
+    axion_abundance_fractional_step_sizes = np.array([0.005, 0.01, 0.05, 0.1, 0.2])
 
     parameters_numeric = ["h", "omegaCDM", "omegaB", "n_s", "A_s", "axion_frac"]
-    parameter_fractional_step_sizes = {"h":axion_abundance_fractional_step_sizes, "omegaCDM":axion_abundance_fractional_step_sizes, "omegaB":axion_abundance_fractional_step_sizes, "n_s":axion_abundance_fractional_step_sizes/10, "A_s":axion_abundance_fractional_step_sizes, "axion_frac":axion_abundance_fractional_step_sizes}
+    parameter_fractional_step_sizes = {"h":[0.01, 0.05], "omegaCDM":[0.01, 0.05], "omegaB":[0.01, 0.05], "n_s":[0.001, 0.005], "A_s":[0.001, 0.005], "axion_frac":axion_abundance_fractional_step_sizes}
     parameters_analytic = ["A_s", "b"]
 
 
