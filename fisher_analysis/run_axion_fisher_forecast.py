@@ -41,8 +41,8 @@ if rank==0:
 
     axion_abundance_fractional_step_sizes = np.array([0.01, 0.05, 0.1, 0.2])
 
-    parameters_numeric = ["h", "omega_cdm", "omega_b", "n_s", "axion_frac"]
-    parameter_fractional_step_sizes = {"h":0.05, "omega_cdm":0.05, "omega_b":0.05, "n_s":0.005, "axion_frac":axion_abundance_fractional_step_sizes}
+    parameters_numeric = ["h", "omegaCDM", "omegaB", "n_s", "axion_frac"]
+    parameter_fractional_step_sizes = {"h":0.05, "omegaCDM":0.05, "omegaB":0.05, "n_s":0.005, "axion_frac":axion_abundance_fractional_step_sizes}
     parameters_analytic = ["A_s"]
 
     stencil = np.array([-2, -1, 0, 1, 2])
