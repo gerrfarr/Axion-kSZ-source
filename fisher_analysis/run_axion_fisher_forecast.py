@@ -24,8 +24,6 @@ comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
 
-print(f"This is rank {rank}")
-
 axion_masses = [1.0e-26]#np.logspace(-27, -23, 41)
 
 if rank==0:
@@ -56,7 +54,6 @@ if rank==0:
         new, ID, ran_TF, successful_TF, out_path, log_path = cosmoDB.add(cosmo)
         file_root = os.path.basename(out_path)
         root_path = out_path[:-len(file_root)]
-        print(root_path, file_root, log_path)
 
         wrapper = AxionCAMBWrapper(root_path, file_root, log_path)
         if new:
