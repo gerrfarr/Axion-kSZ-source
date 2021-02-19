@@ -1,15 +1,15 @@
-from theory.cosmology import Cosmology
-from theory.sigma_interpolation import SigmaInterpolator
-from theory.halo_bias import HaloBias
-from theory.halo_bias_new import HaloBias as HaloBiasNew
-from theory.mass_functions import JenkinsMassFunction, PressSchechterMassFunction
-from theory.correlation_functions import CorrelationFunctions
+from ..theory.cosmology import Cosmology
+from ..theory.sigma_interpolation import SigmaInterpolator
+from ..theory.halo_bias import HaloBias
+from ..theory.halo_bias_new import HaloBias as HaloBiasNew
+from ..theory.mass_functions import JenkinsMassFunction, PressSchechterMassFunction
+from ..theory.correlation_functions import CorrelationFunctions
 
-from axion_camb_wrappers.growth_interpolation import GrowthInterpolation
-from axion_camb_wrappers.power_interpolation import LinearPowerInterpolation
+from ..axion_camb_wrappers.growth_interpolation import GrowthInterpolation
+from ..axion_camb_wrappers.power_interpolation import LinearPowerInterpolation
 
-from auxiliary.integration_helper import IntegrationHelper
-from auxiliary.survey_helper import SurveyType
+from ..auxiliary.integration_helper import IntegrationHelper
+from ..auxiliary.survey_helper import SurveyType
 
 
 def compute_mean_pairwise_velocity(r_vals, rMin, cosmo, lin_power, growth, survey, window="gaussian", old_bias=False, jenkins_mass=False, integrationHelper=None, kMin=1.0e-4, kMax=1.0e2, do_unbiased=False, get_correlation_functions=False):
