@@ -40,7 +40,7 @@ if rank==0:
     axion_abundance_fractional_step_sizes = np.array([0.01, 0.05, 0.1, 0.2, 0.4])
 
     parameters_numeric = ["h", "omegaCDM", "omegaB", "n_s", "A_s", "axion_frac"]
-    parameter_fractional_step_sizes = {"h":[0.001, 0.005], "omegaCDM":[0.001, 0.005], "omegaB":[0.001, 0.005], "n_s":[0.001, 0.005], "A_s":[0.001, 0.005], "axion_frac":axion_abundance_fractional_step_sizes}
+    parameter_fractional_step_sizes = {"h":[0.01, 0.05, 0.1], "omegaCDM":[0.01, 0.05, 0.1], "omegaB":[0.01, 0.05, 0.1], "n_s":0.005, "A_s":0.005, "axion_frac":axion_abundance_fractional_step_sizes}
     parameters_analytic = ["b"]
 
 
