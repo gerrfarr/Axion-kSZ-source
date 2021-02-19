@@ -95,7 +95,7 @@ class Covariance(object):
         r2Mesh, dump = np.meshgrid(r_pairs[:,1], self.__center_z)
         volumeMesh = np.einsum('i,j->ij', self.__bin_volumes, np.ones(r_pairs.shape[0]))
 
-        prefactors = 4/(np.pi**2*volumeMesh) * 100.0**2/(1+self.__correlations.get_correlation_functions(r1Mesh, zMesh)[0])/(1+self.__correlations.get_correlation_functions(r2Mesh, zMesh)[0])*self.__growth.f(1.0e-3, zMesh)**2
+        prefactors = 4/(np.pi**2*volumeMesh) * 100.0**2/(1+self.__correlations.get_correlation_functions(r1Mesh, zMesh)[0])/(1+self.__correlations.get_correlation_functions(r2Mesh, zMesh)[0])
 
         eval_vals_logk, weights = self.__intHelper.get_points_weights(np.log(self.__kmin), np.log(self.__kmax))
         logkMesh = np.einsum('i, jk->jki', eval_vals_logk, np.ones(zMesh.shape))
@@ -111,11 +111,11 @@ class Covariance(object):
         windowMesh2 = self.binned_window_function(kMesh, r2Mesh - self.__deltaR / 2, r2Mesh + self.__deltaR / 2)
 
         if not self.__old_bias:
-            integrand = kMesh * (cosmic_variance*self.__growth(kMesh, zIntMesh)**2 * self.__linear_power(kMesh) * self.__bias(kMesh,zIntMesh, 1) * self.__bias(kMesh,zIntMesh, 0) + shot_noise/number_density_mesh)**2*windowMesh1*windowMesh2*weightMesh
+            integrand = kMesh * self.__growth.f(kMesh, zMesh)**2 * (cosmic_variance*self.__growth(kMesh, zIntMesh)**2 * self.__linear_power(kMesh) * self.__bias(kMesh,zIntMesh, 1) * self.__bias(kMesh,zIntMesh, 0) + shot_noise/number_density_mesh)**2*windowMesh1*windowMesh2*weightMesh
             #integrand = kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (1 / number_density_mesh)**2 * windowMesh1 * windowMesh2 * weightMesh
             #integrand = kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (self.__growth(kMesh, zIntMesh)**2 * self.__linear_power(kMesh) * self.__bias(kMesh, zIntMesh, 1) * self.__bias(kMesh, zIntMesh, 0))**2 * windowMesh1 * windowMesh2 * weightMesh
         else:
-            integrand = kMesh * (cosmic_variance*self.__growth(kMesh, zIntMesh)**2 * self.__linear_power(kMesh) * self.__bias(kMesh, zIntMesh, 1) + shot_noise / number_density_mesh)**2 * windowMesh1 * windowMesh2 * weightMesh
+            integrand = kMesh * self.__growth.f(kMesh, zMesh)**2 * (cosmic_variance*self.__growth(kMesh, zIntMesh)**2 * self.__linear_power(kMesh) * self.__bias(kMesh, zIntMesh, 1) + shot_noise / number_density_mesh)**2 * windowMesh1 * windowMesh2 * weightMesh
             #integrand = kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (1 / number_density_mesh)**2 * windowMesh1 * windowMesh2 * weightMesh
             #integrand = kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (self.__growth(kMesh, zIntMesh)**2 * self.__linear_power(kMesh) * self.__bias(kMesh, zIntMesh, 1))**2 * windowMesh1 * windowMesh2 * weightMesh
         integral = np.sum(integrand, axis=-1)
