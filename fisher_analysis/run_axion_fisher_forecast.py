@@ -82,7 +82,7 @@ for i_m, m in enumerate(axion_masses):
 
     if rank==0:
         parameter_derivatives = []
-        for i_f, axion_frac in axion_abundances:
+        for i_f, axion_frac in enumerate(axion_abundances):
             fiducial_cosmo = Cosmology.generate(axion_frac=axion_frac, m_axion=m, read_H_from_file=True)
 
             for param in parameters_numeric:
