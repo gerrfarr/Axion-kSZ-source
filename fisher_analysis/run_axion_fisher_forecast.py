@@ -111,7 +111,7 @@ for i_m, m in enumerate(axion_masses):
         for i_ds, ds in enumerate(parameter_derivatives):
             derivatives[i_ds, :, :] = ds.derivs(p_eval.outputs[ds.outputs])
 
-    np.save(f"./test_derivs_ma={m:.3E}.dat", derivatives)
+        np.save(f"./test_derivs_ma={m:.3E}.dat", derivatives)
 
 if rank==0:
     cosmoDB.save()
