@@ -59,6 +59,8 @@ if rank==0:
         if new:
             p_pre_compute.add_job(wrapper, cosmo)
 
+        return wrapper
+
     def mpv_eval_function(cosmo):
         ID, ran_TF, successful_TF, out_path, log_path = cosmoDB.get_by_cosmo(cosmo)
         file_root = os.path.basename(out_path)
@@ -73,11 +75,7 @@ if rank==0:
 
         return id
 
-    def A_s_deriv(cosmo):
-        ID, ran_TF, successful_TF, out_path, log_path = cosmoDB.get_by_cosmo(cosmo)
-        file_root = os.path.basename(out_path)
-        root_path = out_path[:-len(file_root)]
-        wrapper = AxionCAMBWrapper(root_path, file_root, log_path)
+    def A_s_deriv(cosmo, wrapper):
 
         lin_power = wrapper.get_linear_power()
         growth = wrapper.get_growth()
@@ -87,11 +85,7 @@ if rank==0:
 
         return v/(cosmo.A_s + cosmo.A_s**2*xi)
 
-    def b_deriv(cosmo):
-        ID, ran_TF, successful_TF, out_path, log_path = cosmoDB.get_by_cosmo(cosmo)
-        file_root = os.path.basename(out_path)
-        root_path = out_path[:-len(file_root)]
-        wrapper = AxionCAMBWrapper(root_path, file_root, log_path)
+    def b_deriv(cosmo, wrapper):
 
         lin_power = wrapper.get_linear_power()
         growth = wrapper.get_growth()
@@ -114,7 +108,7 @@ for i_m, m in enumerate(axion_masses):
         analytic_derivs_queue_ids = []
         for i_f, axion_frac in enumerate(axion_abundances):
             fiducial_cosmo = Cosmology.generate(axion_frac=axion_frac, m_axion=m, read_H_from_file=True)
-            schedule_camb_run(fiducial_cosmo)
+            fid_axion_camb = schedule_camb_run(fiducial_cosmo)
 
             for param in parameters_numeric:
                 if is_array(parameter_fractional_step_sizes[param]):
@@ -130,7 +124,7 @@ for i_m, m in enumerate(axion_masses):
                     parameter_derivatives.append(ds)
 
             for param in parameters_analytic:
-                analytic_derivs_queue_ids.append(p_eval.add_job(parameters_analytic_deriv_functions[param], fiducial_cosmo))
+                analytic_derivs_queue_ids.append(p_eval.add_job(parameters_analytic_deriv_functions[param], fiducial_cosmo, fid_axion_camb))
 
         p_pre_compute.run()
         for i in range(len(p_pre_compute.outputs)):
