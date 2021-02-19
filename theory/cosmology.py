@@ -130,6 +130,10 @@ class Cosmology(object):
     def tau(self):
         return self.__tau
 
+    @tau.setter
+    def tau(self, new):
+        self.__tau = new
+
     @property
     def A_s(self):
         return self.__A_s
