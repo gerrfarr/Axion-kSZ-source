@@ -22,13 +22,14 @@ rank = comm.Get_rank()
 print(f"This is rank {rank}")
 
 p_pre_compute=ParallelizationQueue()
+p_eval=ParallelizationQueue()
 
 if rank==0:
 
     stencil = np.array([-2,-1,0,1,2])
     cosmo = Cosmology.generate(omega_axion=1e-6)
-    step_size = cosmo.h*0.01
-    param_vals = cosmo.h+stencil*step_size
+    step_size = cosmo.A_s*0.001
+    param_vals = cosmo.A_s+stencil*step_size
 
     cosmoDB= CosmoDB()
 
@@ -51,7 +52,9 @@ if rank==0:
 
         lin_power = wrapper.get_linear_power()
         k_vals = np.logspace(-3,2, 100)
-        return lin_power(k_vals)
+        
+        p_eval.add_job(lin_power, k_vals)
+
 
     ds = ParamDerivatives(cosmo, 'A_s', param_vals, eval_function, eval_function_args=(), eval_function_kwargs={}, pre_computation_function=schedule_camb_run, pre_function_args=(), pre_function_kwargs={}, stencil=stencil)
     ds.prep_parameters()
@@ -60,7 +63,9 @@ if rank==0:
         cosmoDB.set_run_by_cosmo(*p_pre_compute.jobs[i][1], p_pre_compute.outputs[i])
 
     ds.prep_evaluation()
-    np.savetxt("./test_derivs.dat", ds.derivs())
+    p_eval.run()
+    
+    np.savetxt("./test_derivs.dat", ds.derivs(p_eval.outputs))
     
     cosmoDB.save()
 
