@@ -37,11 +37,11 @@ if rank==0:
 
     axion_abundances = [1.0e-2]#np.array([1.0e-04, 1.6e-04, 2.5e-04, 4.0e-04, 6.3e-04, 1.0e-03, 1.6e-03, 2.5e-03, 4.0e-03, 6.3e-03, 1.0e-02, 1.6e-02, 2.5e-02, 4.0e-02, 5.3e-02, 6.3e-02, 1.0e-01, 1.1e-01, 1.6e-01, 2.1e-01, 2.5e-01, 2.6e-01, 3.2e-01, 3.7e-01, 4.0e-01, 4.2e-01, 4.7e-01, 5.3e-01, 5.8e-01, 6.3e-01, 6.8e-01, 7.4e-01, 7.9e-01, 8.4e-01, 8.9e-01, 9.5e-01])
 
-    axion_abundance_fractional_step_sizes = np.array([0.01, 0.05, 0.1, 0.2])
+    axion_abundance_fractional_step_sizes = np.array([0.005, 0.01, 0.05, 0.1, 0.2, 0.4])
 
-    parameters_numeric = ["h", "omegaCDM", "omegaB", "n_s", "axion_frac"]
-    parameter_fractional_step_sizes = {"h":0.05, "omegaCDM":0.05, "omegaB":0.05, "n_s":0.005, "axion_frac":axion_abundance_fractional_step_sizes}
-    parameters_analytic = ["A_s"]
+    parameters_numeric = ["h", "omegaCDM", "omegaB", "n_s", "A_s", "axion_frac"]
+    parameter_fractional_step_sizes = {"h":axion_abundance_fractional_step_sizes, "omegaCDM":axion_abundance_fractional_step_sizes, "omegaB":axion_abundance_fractional_step_sizes, "n_s":axion_abundance_fractional_step_sizes/10, "axion_frac":axion_abundance_fractional_step_sizes}
+    parameters_analytic = ["A_s", "b"]
 
 
     stencil = np.array([-2, -1, 0, 1, 2])
@@ -73,6 +73,37 @@ if rank==0:
 
         return id
 
+    def A_s_deriv(cosmo):
+        ID, ran_TF, successful_TF, out_path, log_path = cosmoDB.get_by_cosmo(cosmo)
+        file_root = os.path.basename(out_path)
+        root_path = out_path[:-len(file_root)]
+        wrapper = AxionCAMBWrapper(root_path, file_root, log_path)
+
+        lin_power = wrapper.get_linear_power()
+        growth = wrapper.get_growth()
+        cosmo.set_H_interpolation(wrapper.get_hubble())
+
+        v, xi, dbarxi_dloga = compute_mean_pairwise_velocity(r_vals, rMin, cosmo, lin_power, growth, survey, window=window, old_bias=old_bias, jenkins_mass=False, integrationHelper=intHelper, kMin=kMin, kMax=kMax, do_unbiased=False, get_correlation_functions=True)
+
+        return v/(cosmo.A_s + cosmo.A_s**2*xi)
+
+    def b_deriv(cosmo):
+        ID, ran_TF, successful_TF, out_path, log_path = cosmoDB.get_by_cosmo(cosmo)
+        file_root = os.path.basename(out_path)
+        root_path = out_path[:-len(file_root)]
+        wrapper = AxionCAMBWrapper(root_path, file_root, log_path)
+
+        lin_power = wrapper.get_linear_power()
+        growth = wrapper.get_growth()
+        cosmo.set_H_interpolation(wrapper.get_hubble())
+
+        v, xi, dbarxi_dloga = compute_mean_pairwise_velocity(r_vals, rMin, cosmo, lin_power, growth, survey, window=window, old_bias=old_bias, jenkins_mass=False, integrationHelper=intHelper, kMin=kMin, kMax=kMax, do_unbiased=False, get_correlation_functions=True)
+
+        return v*(1-xi)/(1+xi)
+
+
+    parameters_analytic_deriv_functions = {"A_s": A_s_deriv, "b": b_deriv}
+
 for i_m, m in enumerate(axion_masses):
 
     p_pre_compute = ParallelizationQueue()
@@ -80,8 +111,10 @@ for i_m, m in enumerate(axion_masses):
 
     if rank==0:
         parameter_derivatives = []
+        analytic_derivs_queue_ids = []
         for i_f, axion_frac in enumerate(axion_abundances):
             fiducial_cosmo = Cosmology.generate(axion_frac=axion_frac, m_axion=m, read_H_from_file=True)
+            schedule_camb_run(fiducial_cosmo)
 
             for param in parameters_numeric:
                 if is_array(parameter_fractional_step_sizes[param]):
@@ -96,15 +129,23 @@ for i_m, m in enumerate(axion_masses):
                     ds.prep_parameters()
                     parameter_derivatives.append(ds)
 
+            for param in parameters_analytic:
+                analytic_derivs_queue_ids.append(p_eval.add_job(parameters_analytic_deriv_functions[param], fiducial_cosmo))
+
         p_pre_compute.run()
         for i in range(len(p_pre_compute.outputs)):
             cosmoDB.set_run_by_cosmo(*p_pre_compute.jobs[i][1], p_pre_compute.outputs[i])
 
         for ds in parameter_derivatives:
             ds.prep_evaluation()
+
         p_eval.run()
 
-        derivatives = np.empty((len(parameter_derivatives), len(survey.center_z), len(r_vals)))
+        derivatives = np.empty((len(parameter_derivatives)+len(analytic_derivs_queue_ids), len(survey.center_z), len(r_vals)))
+
+        for i, id in enumerate(analytic_derivs_queue_ids):
+            derivatives[len(parameter_derivatives)+i, :, :] = p_eval.outputs[id]
+
         for i_ds, ds in enumerate(parameter_derivatives):
             derivatives[i_ds, :, :] = ds.derivs(p_eval.outputs[ds.outputs])
 
