@@ -75,7 +75,7 @@ if rank==0:
 
         return id
 
-    def A_s_deriv(cosmo, wrapper):
+    def A_s_deriv(cosmo, wrapper, r_vals, rMin, window, old_bias, intHelper, kMin, kMax):
 
         lin_power = wrapper.get_linear_power()
         growth = wrapper.get_growth()
@@ -85,7 +85,7 @@ if rank==0:
 
         return v/(cosmo.A_s + cosmo.A_s**2*xi)
 
-    def b_deriv(cosmo, wrapper):
+    def b_deriv(cosmo, wrapper, r_vals, rMin, window, old_bias, intHelper, kMin, kMax):
 
         lin_power = wrapper.get_linear_power()
         growth = wrapper.get_growth()
@@ -124,7 +124,7 @@ for i_m, m in enumerate(axion_masses):
                     parameter_derivatives.append(ds)
 
             for param in parameters_analytic:
-                analytic_derivs_queue_ids.append(p_eval.add_job(parameters_analytic_deriv_functions[param], fiducial_cosmo, fid_axion_camb))
+                analytic_derivs_queue_ids.append(p_eval.add_job(parameters_analytic_deriv_functions[param], fiducial_cosmo, fid_axion_camb, r_vals, rMin, window, old_bias, intHelper, kMin, kMax))
 
         p_pre_compute.run()
         for i in range(len(p_pre_compute.outputs)):
