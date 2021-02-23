@@ -52,6 +52,8 @@ class Covariance(object):
         self.__bin_volumes = np.empty(Nz)
         self.__pair_numbers = np.empty((Nz, len(self.__r_vals)))
 
+        self.__covariance = None
+
     def comoving_distance(self, z):
         return 3000.0 / self.__cosmo.h * self.__intHelper.integrate(lambda zp: 1 / (self.__cosmo.E(zp)), 0, z)
 
@@ -129,9 +131,19 @@ class Covariance(object):
         d = raw_pairs[:, 1] == r_pairs[:, 0, np.newaxis]
 
         r_ia, r_ib = np.where(a*b+c*d)
+        if shot_noise and cosmic_variance:
+            self.__covariance = output[:,r_ia[r_ib.argsort()]].reshape(len(self.__center_z), len(self.__r_vals), len(self.__r_vals))
         return output[:,r_ia[r_ib.argsort()]].reshape(len(self.__center_z), len(self.__r_vals), len(self.__r_vals))
-
 
     def noise_terms(self):
         dump, sigma_vMesh = np.meshgrid(self.__r_vals, self.__sigma_v_vals)
         return 2*sigma_vMesh**2/self.__pair_numbers
+
+    def full_covariance(self):
+        assert(self.__covariance is not None)
+
+        noise = np.zeros((self.__covariance.shape))
+        for i in range(self.__Nz):
+            np.fill_diagonal(noise[i], self.noise_terms()[i])
+
+        return self.__covariance+noise
