@@ -37,6 +37,7 @@ def compute_covariance_matrix(r_vals, rMin, deltaR, cosmo, lin_power, growth, su
     corr.compute(old_bias=old_bias)
 
     cov = Covariance(cosmo, lin_power, growth, mass_function, halo_bias, corr, survey.zMin, survey.zMax, survey.Nz, r_vals, deltaR, survey.f_sky, survey.sigma_v, integrationHelper, kmin=kMin, kmax=halo_bias._kMax if window == "sharp_k" and old_bias and kMax > halo_bias._kMax else kMax, mMin=survey.mMin, mMax=survey.mMax, old_bias=old_bias)
+    cov.pre_compute()
     cov.compute()
 
     return cov.full_covariance()
