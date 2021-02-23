@@ -60,15 +60,15 @@ class SurveyType(object):
 
 class StageIV(SurveyType):
     def __init__(self, fid_cosmo):
-        sigma_v=np.array([120.0, 120.0, 120.0, 120.0, 130.0])/fid_cosmo.h #km/s (need to convert to h km/s)
+        sigma_v=np.array([120.0, 120.0, 120.0, 120.0, 130.0]) #km/s
         super().__init__(0.1, 0.6, 5, 0.6e14*fid_cosmo.h, 1e16*fid_cosmo.h, self.overlap2f_sky(1e4), sigma_v)
 
 class StageIII(SurveyType):
     def __init__(self, fid_cosmo):
-        sigma_v=np.array([160, 200, 230])/fid_cosmo.h #km/s (need to convert to h km/s)
+        sigma_v=np.array([160, 200, 230])#km/s
         super().__init__(0.1, 0.4, 3, 1e14*fid_cosmo.h, 1e16*fid_cosmo.h, self.overlap2f_sky(0.6e4), sigma_v)
 
 class StageII(SurveyType):
     def __init__(self, fid_cosmo):
-        sigma_v=np.array([310, 460, 560])/fid_cosmo.h #km/s (need to convert to h km/s)
+        sigma_v=np.array([310, 460, 560])#km/s
         super().__init__(0.1, 0.4, 3, 1e14*fid_cosmo.h, 1e16*fid_cosmo.h, self.overlap2f_sky(0.4e4), sigma_v)
