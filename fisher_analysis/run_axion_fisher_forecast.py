@@ -107,6 +107,9 @@ if rank==0:
 
         return v*(1-xi)/(1+xi)
 
+
+    parameters_analytic_deriv_functions = {"b": b_deriv}
+
 for i_m, m in enumerate(axion_masses):
 
     p_pre_compute = ParallelizationQueue()
@@ -151,6 +154,8 @@ for i_m, m in enumerate(axion_masses):
         p_pre_compute.run()
         for i in range(len(p_pre_compute.outputs)):
             cosmoDB.set_run_by_cosmo(*p_pre_compute.jobs[i][1], p_pre_compute.outputs[i])
+
+        cosmoDB.save()
 
         for i_f, axion_frac in enumerate(axion_abundances):
             covariance_eval_ids.append(cov_eval_function(fiducial_cosmologies[i_f]))
