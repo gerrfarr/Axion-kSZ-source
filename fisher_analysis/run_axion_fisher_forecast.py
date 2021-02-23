@@ -93,7 +93,7 @@ if rank==0:
         growth = wrapper.get_growth()
         cosmo.set_H_interpolation(wrapper.get_hubble())
 
-        id = p_eval.add_job(compute_covariance_matrix, r_vals, delta_r, rMin, cosmo, lin_power, growth, survey, window=window, old_bias=old_bias, jenkins_mass=False, integrationHelper=intHelper, kMin=kMin, kMax=kMax)
+        id = p_eval.add_job(compute_covariance_matrix, r_vals, rMin, delta_r, cosmo, lin_power, growth, survey, window=window, old_bias=old_bias, jenkins_mass=False, integrationHelper=intHelper, kMin=kMin, kMax=kMax)
 
         return id
 
