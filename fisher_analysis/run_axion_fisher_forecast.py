@@ -107,9 +107,6 @@ if rank==0:
 
         return v*(1-xi)/(1+xi)
 
-
-    parameters_analytic_deriv_functions = {"b": b_deriv}
-
 for i_m, m in enumerate(axion_masses):
 
     p_pre_compute = ParallelizationQueue()
@@ -117,6 +114,7 @@ for i_m, m in enumerate(axion_masses):
     p_fisher = ParallelizationQueue()
 
     if rank==0:
+        fiducial_cosmologies = []
         parameter_derivatives = []
         analytic_derivs_queue_ids = []
         covariance_eval_ids = []
@@ -125,8 +123,8 @@ for i_m, m in enumerate(axion_masses):
             analytic_derivs_queue_ids_tmp = {}
 
             fiducial_cosmo = Cosmology.generate(axion_frac=axion_frac, m_axion=m, read_H_from_file=True)
+            fiducial_cosmologies.append(fiducial_cosmo)
             fid_axion_camb = schedule_camb_run(fiducial_cosmo)
-            covariance_eval_ids.append(cov_eval_function(fiducial_cosmo))
 
             for param in cosmo_params+nuisance_params:
                 if param in parameter_fractional_step_sizes.keys():
@@ -155,6 +153,7 @@ for i_m, m in enumerate(axion_masses):
             cosmoDB.set_run_by_cosmo(*p_pre_compute.jobs[i][1], p_pre_compute.outputs[i])
 
         for i_f, axion_frac in enumerate(axion_abundances):
+            covariance_eval_ids.append(cov_eval_function(fiducial_cosmologies[i_f]))
             for ds in parameter_derivatives[i_f].values():
                 if is_array(ds):
                     for d in ds:
