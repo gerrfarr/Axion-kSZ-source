@@ -33,7 +33,7 @@ if rank==0:
     rMin=1.0e-3
     r_vals = np.arange(20.0, 180.0, delta_r)
     survey=StageIV(Cosmology.generate())
-    window="sharp_k"
+    window="top_hat"
     old_bias=False
     kMin,kMax=1.0e-4,1.0e2
 
