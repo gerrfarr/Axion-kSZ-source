@@ -192,16 +192,19 @@ for i_m, m in enumerate(axion_masses):
                 i_param += 1
 
         np.save(f"./test_derivs_ma={m:.3E}.dat", derivatives)
+        np.save(f"./test_covariances_ma={m:.3E}.dat", np.array(p_eval.outputs[covariance_eval_ids]))
 
         for i_f, axion_frac in enumerate(axion_abundances):
             covariance = p_eval.outputs[covariance_eval_ids[i_f]]
             deriv_sets = get_deriv_sets(derivatives[i_f], cosmo_params + nuisance_params, parameter_fractional_step_sizes)
             for d_set in deriv_sets:
-                p_fisher.add_job(make_fisher_matrix, np.array(d_set[0:-len(nuisance_params)]), np.array(d_set[-len(nuisance_params):]), survey.center_z, covariance)
+                d_set= np.array(d_set)
+                print(d_set.shape, np.any(d_set == np.nan))
+                p_fisher.add_job(make_fisher_matrix, d_set[0:-len(nuisance_params)], d_set[-len(nuisance_params):], survey.center_z, covariance)
 
         p_fisher.run()
 
-        np.save(f"./test_fisher_matrices_ma={m:.3E}.dat", p_fisher.outputs)
+        np.save(f"./test_fisher_matrices_ma={m:.3E}.dat", np.array(p_fisher.outputs))
 
 if rank==0:
     cosmoDB.save()
