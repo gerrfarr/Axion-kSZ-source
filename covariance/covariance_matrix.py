@@ -113,7 +113,7 @@ class Covariance(object):
         windowMesh2 = self.binned_window_function(kMesh, r2Mesh - self.__deltaR / 2, r2Mesh + self.__deltaR / 2)
 
         if not self.__old_bias:
-            integrand = kMesh * self.__growth.f(kMesh, zMesh)**2 * (cosmic_variance*self.__growth(kMesh, zIntMesh)**2 * self.__linear_power(kMesh) * self.__bias(kMesh,zIntMesh, 1) * self.__bias(kMesh,zIntMesh, 0) + shot_noise/number_density_mesh)**2*windowMesh1*windowMesh2*weightMesh
+            integrand = kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (cosmic_variance*self.__growth(kMesh, zIntMesh)**2 * self.__linear_power(kMesh) * self.__bias(kMesh,zIntMesh, 1) * self.__bias(kMesh,zIntMesh, 0) + shot_noise/number_density_mesh)**2*windowMesh1*windowMesh2*weightMesh
             #integrand = kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (1 / number_density_mesh)**2 * windowMesh1 * windowMesh2 * weightMesh
             #integrand = kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (self.__growth(kMesh, zIntMesh)**2 * self.__linear_power(kMesh) * self.__bias(kMesh, zIntMesh, 1) * self.__bias(kMesh, zIntMesh, 0))**2 * windowMesh1 * windowMesh2 * weightMesh
         else:
