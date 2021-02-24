@@ -191,8 +191,8 @@ for i_m, m in enumerate(axion_masses):
                 derivatives[i_f, i_param, :, :] = p_eval.outputs[analytic_derivs_queue_ids[i_f][param]]
                 i_param += 1
 
-        np.save(f"./test_derivs_ma={m:.3E}.dat", derivatives)
-        np.save(f"./test_covariances_ma={m:.3E}.dat", np.array(p_eval.outputs[covariance_eval_ids]))
+        np.save(f"./test_derivs_ma={m:.3E}", derivatives)
+        np.save(f"./test_covariances_ma={m:.3E}", np.array(p_eval.outputs[covariance_eval_ids]))
 
         for i_f, axion_frac in enumerate(axion_abundances):
             covariance = p_eval.outputs[covariance_eval_ids[i_f]]
@@ -204,7 +204,7 @@ for i_m, m in enumerate(axion_masses):
 
         p_fisher.run()
 
-        np.save(f"./test_fisher_matrices_ma={m:.3E}.dat", np.array(p_fisher.outputs))
+        np.save(f"./test_fisher_matrices_ma={m:.3E}", np.array(p_fisher.outputs))
 
 if rank==0:
     cosmoDB.save()
