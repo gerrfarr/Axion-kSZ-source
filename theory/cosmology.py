@@ -60,6 +60,7 @@ class Cosmology(object):
         if omega_axion is not None and axion_frac is None:
             cos.__omega_axion = omega_axion
         elif axion_frac is not None:
+            assert (axion_frac <= 1.0 and axion_frac>=0.0)
             cos.axion_frac=axion_frac
         elif omega_axion is not None and axion_frac is not None:
             raise Exception("Can not simultaneously specify omega_axion and axion_frac.")
@@ -177,6 +178,7 @@ class Cosmology(object):
 
     @axion_frac.setter
     def axion_frac(self, new):
+        assert(new<=1.0 and new>=0.0)
         new_omega_axion = self.omegaDM*new
         self.__omega_cdm = self.omegaDM*(1-new)
         self.__omega_axion = new_omega_axion
