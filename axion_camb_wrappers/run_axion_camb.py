@@ -33,6 +33,7 @@ class AxionCAMBWrapper(object):
 
         success=True
         with open(self.__log_path, "a+", buffering=1) as log_file:
+            log_file.write(repr(cosmo)+"\n")
             command_line = self.__camb_path.replace(" ", "\ ")+" "+self.__param_path.replace(" ", "\ ")+" 1 {} 2 {} 3 {} 4 {} 5 {} 6 {} 7 {} 8 T 9 {} > {}".format(cosmo.omegaB, cosmo.omegaCDM, cosmo.omega_axion, cosmo.m_axion, cosmo.H0, cosmo.n_s, cosmo.A_s, self.__fileroot.replace(" ", "\ "), self.__log_path.replace(" ", "\ "))
 
             try:
@@ -44,7 +45,6 @@ class AxionCAMBWrapper(object):
             except Exception as ex:
                 log_file.write("CAMB failed with message: "+str(ex)+"\n")
                 success=False
-                raise Exception("CAMB failed!")
             finally:
                 for path_appendix in self.camb_files:
                     try:
