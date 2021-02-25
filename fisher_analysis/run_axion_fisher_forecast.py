@@ -167,7 +167,7 @@ for i_m, m in enumerate(axion_masses):
         cosmoDB.save()
 
         if i_m==0:
-            covariance_eval_id = cov_eval_function(fiducial_cosmologies[i_f])
+            covariance_eval_id = cov_eval_function(covariance_cosmo)
 
         for i_f, axion_frac in enumerate(axion_abundances):
 
