@@ -206,7 +206,8 @@ for i_m, m in enumerate(axion_masses):
                 i_param += 1
 
         np.save(f"./test_derivs_ma={m:.3E}", derivatives)
-        np.save(f"./test_covariances_ma={m:.3E}", np.array(p_eval.outputs[covariance_eval_ids]))
+        if i_m == 0:
+            np.save(f"./test_covariances", np.array(p_eval.outputs[covariance_eval_id]))
 
         for i_f, axion_frac in enumerate(axion_abundances):
             deriv_sets = get_deriv_sets(derivatives[i_f], cosmo_params + nuisance_params, parameter_fractional_step_sizes)
