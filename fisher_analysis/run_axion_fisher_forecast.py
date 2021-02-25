@@ -113,6 +113,8 @@ if rank==0:
 
     parameters_analytic_deriv_functions = {"b": b_deriv}
 
+    covariance = None
+
 for i_m, m in enumerate(axion_masses):
 
     p_pre_compute = ParallelizationQueue()
@@ -123,7 +125,11 @@ for i_m, m in enumerate(axion_masses):
         fiducial_cosmologies = []
         parameter_derivatives = []
         analytic_derivs_queue_ids = []
-        covariance_eval_ids = []
+        if i_m==0:
+            covariance_eval_id = None
+            covariance_cosmo = Cosmology.generate(omega_axion=1.0e-6, m_axion=1.0e-24, read_H_from_file=True)
+            cov_camb = schedule_camb_run(covariance_cosmo)
+
         for i_f, axion_frac in enumerate(axion_abundances):
             parameter_derivatives_tmp = {}
             analytic_derivs_queue_ids_tmp = {}
@@ -160,8 +166,11 @@ for i_m, m in enumerate(axion_masses):
 
         cosmoDB.save()
 
+        if i_m==0:
+            covariance_eval_id = cov_eval_function(fiducial_cosmologies[i_f])
+
         for i_f, axion_frac in enumerate(axion_abundances):
-            covariance_eval_ids.append(cov_eval_function(fiducial_cosmologies[i_f]))
+
             for ds in parameter_derivatives[i_f].values():
                 if is_array(ds):
                     for d in ds:
@@ -170,6 +179,8 @@ for i_m, m in enumerate(axion_masses):
                     ds.prep_evaluation()
 
         p_eval.run()
+        if i_m == 0:
+            covariance = p_eval.outputs[covariance_eval_id]
 
         derivatives = np.full((len(axion_abundances), number_of_parameter_step_sizes + len(nuisance_params), len(survey.center_z), len(r_vals)), np.nan)
 
@@ -198,7 +209,6 @@ for i_m, m in enumerate(axion_masses):
         np.save(f"./test_covariances_ma={m:.3E}", np.array(p_eval.outputs[covariance_eval_ids]))
 
         for i_f, axion_frac in enumerate(axion_abundances):
-            covariance = p_eval.outputs[covariance_eval_ids[i_f]]
             deriv_sets = get_deriv_sets(derivatives[i_f], cosmo_params + nuisance_params, parameter_fractional_step_sizes)
             for d_set in deriv_sets:
                 d_set= np.array(d_set)
