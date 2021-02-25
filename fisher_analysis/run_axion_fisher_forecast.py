@@ -82,7 +82,7 @@ if rank==0:
 
             id = p_eval.add_job(compute_mean_pairwise_velocity, r_vals, rMin, cosmo, lin_power, growth, survey, window=window, old_bias=old_bias, jenkins_mass=False, integrationHelper=intHelper, kMin=kMin, kMax=kMax, do_unbiased=False, get_correlation_functions=False)
         else:
-            id = p_eval.add_job(lambda dummy: np.full((len(survey.center_z), len(r_vals)), np.nan), None)
+            id = p_eval.add_job(lambda survey, r_vals: np.full((len(survey.center_z), len(r_vals)), np.nan), survey, r_vals)
 
         return id
 
