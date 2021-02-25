@@ -177,8 +177,9 @@ class Cosmology(object):
 
     @axion_frac.setter
     def axion_frac(self, new):
-        self.__omega_axion = self.omegaDM*new
+        new_omega_axion = self.omegaDM*new
         self.__omega_cdm = self.omegaDM*(1-new)
+        self.__omega_axion = new_omega_axion
 
     @property
     def rho_crit(self):
@@ -231,8 +232,8 @@ class CosmologyCustomH(Cosmology):
         return self.H(z)/self.H0
 
     @staticmethod
-    def generate(m_axion=None, omega_axion=None, h=None, omega_cdm=None, omega_b=None, n_s=None, A_s=None, read_H_from_file=True):
-        return Cosmology.generate(m_axion, omega_axion, h, omega_cdm, omega_b, n_s, A_s, read_H_from_file)
+    def generate(m_axion=None, omega_axion=None, axion_frac=None, h=None, omega_cdm=None, omega_b=None, n_s=None, A_s=None, read_H_from_file=True):
+        return Cosmology.generate(m_axion, omega_axion, axion_frac, h, omega_cdm, omega_b, n_s, A_s, read_H_from_file)
 
     def __copy__(self):
         return Cosmology.generate(m_axion=self.m_axion, omega_axion=self.omega_axion, h=self.h, omega_cdm=self.omegaCDM, omega_b=self.omegaB, n_s=self.n_s, A_s=self.A_s, read_H_from_file=True)
