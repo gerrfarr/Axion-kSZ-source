@@ -186,6 +186,7 @@ for i_m, m in enumerate(axion_masses):
 
         for i_f, axion_frac in enumerate(axion_abundances):
             i_param = 0
+            fiducial_cosmo = fiducial_cosmologies[i_f]
             for param in cosmo_params:
                 if is_array(parameter_fractional_step_sizes[param]):
                     for i_step_size, step_size in enumerate(parameter_fractional_step_sizes[param]):
