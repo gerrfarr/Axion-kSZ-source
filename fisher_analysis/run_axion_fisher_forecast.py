@@ -26,7 +26,7 @@ comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
 
-axion_masses = [1.0e-27, 0.99e-26, 1.0e-25, 1.0e-24]#[1.0e-27, 1.0e-26, 1.0e-25, 1.0e-24, 1.0e-23]#np.logspace(-27, -23, 41)
+axion_masses = [5.0e-27, 5.0e-26, 1.0e-25, 1.0e-24]#[1.0e-27, 1.0e-26, 1.0e-25, 1.0e-24, 1.0e-23]#np.logspace(-27, -23, 41)
 
 if rank==0:
     delta_r = 2.0

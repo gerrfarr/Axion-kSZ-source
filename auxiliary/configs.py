@@ -1,6 +1,6 @@
-param_file_path="/Users/gerrit/SynologyDrive/College/Research/kSZ/axionCAMB/inifiles/params.ini"
-axion_camb_path="/Users/gerrit/SynologyDrive/College/Research/kSZ/axionCAMB/camb"
+param_file_path="/global/homes/g/gfarren/axion kSZ/axionCAMB/inifiles/params.ini"
+axion_camb_path="/global/homes/g/gfarren/axion kSZ/axionCAMB/camb"
 
-cosmo_database="/Users/gerrit/SynologyDrive/College/Research/kSZ/CAMB_outputs/cosmo_db.dat"
+cosmo_database="/global/cscratch1/sd/gfarren/CAMB_outputs/cosmo_db_tests2.dat"
 
-camb_outputs_path="/Users/gerrit/SynologyDrive/College/Research/kSZ/CAMB_outputs/"
+camb_outputs_path="/global/cscratch1/sd/gfarren/CAMB_outputs/tests/"

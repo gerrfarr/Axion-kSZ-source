@@ -43,8 +43,8 @@ def test_two():
             p1.add_job(f, (x, cosmo), None)
             p2.add_job(f, (x**2, cosmo), None)
 
-        p1.run()
         p2.run()
+        p1.run()
 
         print(p1.outputs, p2.outputs)
 
