@@ -47,8 +47,10 @@ if rank==0:
 
     axion_abundance_fractional_step_sizes = np.array([0.05, 0.1, 0.2, 0.4])
 
-    cosmo_params = ["h", "omegaCDM", "omegaB", "n_s", "A_s", "axion_frac"]
-    parameter_fractional_step_sizes = {"h":0.05, "omegaCDM":0.05, "omegaB":0.05, "n_s":0.005, "A_s":0.005, "axion_frac":axion_abundance_fractional_step_sizes}
+    cosmo_params = ["h", "omegaCDM", "omegaB", "n_s", "A_s", "log_axion_frac"]
+    parameter_fractional_step_sizes = {"h":0.05, "omegaCDM":0.05, "omegaB":0.05, "n_s":0.005, "A_s":0.005, "log_axion_frac":axion_abundance_fractional_step_sizes}
+    parameter_absolute_step_sizes = {"h": 0.0, "omegaCDM": 0.0, "omegaB": 0.0, "n_s": 0.0, "A_s": 0.0, "log_axion_frac": np.zeros(axion_abundance_fractional_step_sizes.shape)}
+    parameter_bounds = {"h": None, "omegaCDM": None, "omegaB": None, "n_s": None, "A_s": None, "log_axion_frac": (-5,0)}
     nuisance_params = ["b"]
 
     number_of_parameter_step_sizes = 0
@@ -148,15 +150,16 @@ for i_m, m in enumerate(axion_masses):
                 if param in parameter_fractional_step_sizes.keys():
                     if is_array(parameter_fractional_step_sizes[param]):
                         parameter_derivatives_tmp[param] = []
-                        for step_size in parameter_fractional_step_sizes[param]:
-                            param_vals = getattr(fiducial_cosmo, param) * (1.0 + stencil * step_size)
-                            if param == "axion_frac" and np.max(param_vals)>=1.0 or np.min(param_vals)<=0.0:
+                        for step_size_frac, step_size_abs in zip(parameter_fractional_step_sizes[param], parameter_absolute_step_sizes[param]):
+                            param_vals = getattr(fiducial_cosmo, param) * (1.0 + stencil * step_size_frac) + stencil * step_size_abs
+                            if parameter_bounds[param] is not None and np.max(param_vals)>=parameter_bounds[param][1] or np.min(param_vals)<=parameter_bounds[param][0]:
                                 continue
+
                             ds = ParamDerivatives(fiducial_cosmo, param, param_vals, mpv_eval_function, eval_function_args=(), eval_function_kwargs={}, pre_computation_function=schedule_camb_run, pre_function_args=(), pre_function_kwargs={}, stencil=stencil)
                             ds.prep_parameters()
                             parameter_derivatives_tmp[param].append(ds)
                     else:
-                        param_vals = getattr(fiducial_cosmo, param)*(1.0 + stencil * parameter_fractional_step_sizes[param])
+                        param_vals = getattr(fiducial_cosmo, param)*(1.0 + stencil * parameter_fractional_step_sizes[param]) + stencil * parameter_absolute_step_sizes[param]
                         ds = ParamDerivatives(fiducial_cosmo, param, param_vals, mpv_eval_function, eval_function_args=(), eval_function_kwargs={}, pre_computation_function=schedule_camb_run, pre_function_args=(), pre_function_kwargs={}, stencil=stencil)
                         ds.prep_parameters()
                         parameter_derivatives_tmp[param] = ds

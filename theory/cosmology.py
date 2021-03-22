@@ -184,6 +184,14 @@ class Cosmology(object):
         self.__omega_axion = new_omega_axion
 
     @property
+    def log_axion_frac(self):
+        return np.log(self.axion_frac)
+
+    @log_axion_frac.setter
+    def log_axion_frac(self, new):
+        self.axion_frac = np.exp(new)
+
+    @property
     def rho_crit(self):
         """
 
