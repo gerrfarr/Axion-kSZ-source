@@ -200,7 +200,7 @@ for i_m, m in enumerate(axion_masses):
                 if is_array(parameter_fractional_step_sizes[param]):
                     for i_step_size, step_size in enumerate(parameter_fractional_step_sizes[param]):
                         param_vals = getattr(fiducial_cosmo, param) * (1.0 + stencil * step_size)
-                        if param == "axion_frac" and np.max(param_vals)>=1.0 or np.min(param_vals)<=0.0:
+                        if parameter_bounds[param] is not None and np.max(param_vals)>=parameter_bounds[param][1] or np.min(param_vals)<=parameter_bounds[param][0]:
                             i_param += 1
                             continue
                         ds = parameter_derivatives[i_f][param][i_step_size]
