@@ -37,13 +37,15 @@ if rank==0:
     rMin=1.0e-3
     r_vals = np.arange(20.0, 180.0, delta_r)
     survey=StageIV(Cosmology.generate())
-    window="gaussian"
+    window="sharp_k"
     old_bias=False
     kMin,kMax=1.0e-4,1.0e2
+    out_path="/scratch/r/rbond/gfarren/axion_kSZ/fisher_outputs/"
+    prefix="sharpK_5point"
 
     axion_abundances = np.array([1.0e-04, 1.6e-04, 2.5e-04, 4.0e-04, 6.3e-04, 1.0e-03, 1.6e-03, 2.5e-03, 4.0e-03, 6.3e-03, 1.0e-02, 1.6e-02, 2.5e-02, 4.0e-02, 5.3e-02, 6.3e-02, 1.0e-01, 1.1e-01, 1.6e-01, 2.1e-01, 2.5e-01, 2.6e-01, 3.2e-01, 3.7e-01, 4.0e-01, 4.2e-01, 4.7e-01, 5.3e-01, 5.8e-01, 6.3e-01, 6.8e-01, 7.4e-01, 7.9e-01, 8.4e-01, 8.9e-01, 9.5e-01])
 
-    axion_abundance_fractional_step_sizes = np.array([0.05, 0.1, 0.2, 0.4, 0.6, 0.8])
+    axion_abundance_fractional_step_sizes = np.array([0.05, 0.1, 0.2, 0.4])
 
     cosmo_params = ["h", "omegaCDM", "omegaB", "n_s", "A_s", "axion_frac"]
     parameter_fractional_step_sizes = {"h":0.05, "omegaCDM":0.05, "omegaB":0.05, "n_s":0.005, "A_s":0.005, "axion_frac":axion_abundance_fractional_step_sizes}
@@ -56,7 +58,7 @@ if rank==0:
         else:
             number_of_parameter_step_sizes += 1
 
-    stencil = np.array([-1, 0, 1])
+    stencil = np.array([-2,-1, 0, 1,2])
 
     cosmoDB = CosmoDB()
     intHelper = IntegrationHelper(1024)
@@ -210,20 +212,19 @@ for i_m, m in enumerate(axion_masses):
                 derivatives[i_f, i_param, :, :] = p_eval.outputs[analytic_derivs_queue_ids[i_f][param]]
                 i_param += 1
 
-        np.save(f"./test_derivs_ma={m:.3E}", derivatives)
+        np.save(f"{out_path}{prefix}_test_derivs_ma={m:.3E}", derivatives)
         if i_m == 0:
-            np.save(f"./test_covariances", np.array(p_eval.outputs[covariance_eval_id]))
+            np.save(f"{out_path}{prefix}_test_covariances", np.array(p_eval.outputs[covariance_eval_id]))
 
         for i_f, axion_frac in enumerate(axion_abundances):
             deriv_sets = get_deriv_sets(derivatives[i_f], cosmo_params + nuisance_params, parameter_fractional_step_sizes)
             for d_set in deriv_sets:
                 d_set= np.array(d_set)
-                print(d_set.shape, np.any(d_set == np.nan))
                 p_fisher.add_job(make_fisher_matrix, d_set[0:-len(nuisance_params)], d_set[-len(nuisance_params):], survey.center_z, covariance)
 
         p_fisher.run()
 
-        np.save(f"./test_fisher_matrices_ma={m:.3E}", np.array(p_fisher.outputs))
+        np.save(f"{out_path}{prefix}_test_fisher_matrices_ma={m:.3E}", np.array(p_fisher.outputs))
 
 if rank==0:
     cosmoDB.save()
