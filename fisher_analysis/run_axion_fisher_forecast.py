@@ -152,7 +152,7 @@ for i_m, m in enumerate(axion_masses):
                         parameter_derivatives_tmp[param] = []
                         for step_size_frac, step_size_abs in zip(parameter_fractional_step_sizes[param], parameter_absolute_step_sizes[param]):
                             param_vals = getattr(fiducial_cosmo, param) * (1.0 + stencil * step_size_frac) + stencil * step_size_abs
-                            if parameter_bounds[param] is not None and np.max(param_vals)>=parameter_bounds[param][1] or np.min(param_vals)<=parameter_bounds[param][0]:
+                            if parameter_bounds[param] is not None and (np.max(param_vals)>=parameter_bounds[param][1] or np.min(param_vals)<=parameter_bounds[param][0]):
                                 continue
 
                             ds = ParamDerivatives(fiducial_cosmo, param, param_vals, mpv_eval_function, eval_function_args=(), eval_function_kwargs={}, pre_computation_function=schedule_camb_run, pre_function_args=(), pre_function_kwargs={}, stencil=stencil)
@@ -200,7 +200,7 @@ for i_m, m in enumerate(axion_masses):
                 if is_array(parameter_fractional_step_sizes[param]):
                     for i_step_size, step_size in enumerate(parameter_fractional_step_sizes[param]):
                         param_vals = getattr(fiducial_cosmo, param) * (1.0 + stencil * step_size)
-                        if parameter_bounds[param] is not None and np.max(param_vals)>=parameter_bounds[param][1] or np.min(param_vals)<=parameter_bounds[param][0]:
+                        if parameter_bounds[param] is not None and (np.max(param_vals)>=parameter_bounds[param][1] or np.min(param_vals)<=parameter_bounds[param][0]):
                             i_param += 1
                             continue
                         ds = parameter_derivatives[i_f][param][i_step_size]
