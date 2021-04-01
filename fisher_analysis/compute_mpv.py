@@ -55,9 +55,9 @@ def compute_mean_pairwise_velocity(r_vals, rMin, cosmo, lin_power, growth, surve
 
 
     if use_FFTLog:
-        corr = CorrelationFunctions(cosmo, lin_power, growth, halo_bias, kMin, halo_bias._kMax if window == "sharp_k" and old_bias and kMax > halo_bias._kMax else kMax, survey.center_z, rMin, integrationHelper)
+        corr = CorrelationFunctionsFFTLog(cosmo, lin_power, growth, halo_bias, kMin, halo_bias._kMax if window == "sharp_k" and old_bias and kMax > halo_bias._kMax else kMax, survey.center_z, rMin, integrationHelper)
     else:
-        corr = CorrelationFunctionsFFTLog(cosmo, lin_power, growth, halo_bias, kMin, halo_bias._kMax if window == "sharp_k" and old_bias and kMax > halo_bias._kMax else kMax, survey.center_z, rMin, r_vals, integrationHelper)
+        corr = CorrelationFunctions(cosmo, lin_power, growth, halo_bias, kMin, halo_bias._kMax if window == "sharp_k" and old_bias and kMax > halo_bias._kMax else kMax, survey.center_z, rMin, r_vals, integrationHelper)
 
     rMesh,zMesh = np.meshgrid(r_vals, survey.center_z)
     if do_unbiased:
