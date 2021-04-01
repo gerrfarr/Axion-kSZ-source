@@ -124,6 +124,12 @@ class HaloBias(HaloBiasBase):
 
         return vals
 
+    def mean_bias(self, z):
+        return self._b_assign_func(z)
+
+    def mean_mass(self, z):
+        return self._m_assign_func(z)
+
 
 
 class HaloBiasFFTLog(HaloBias):
