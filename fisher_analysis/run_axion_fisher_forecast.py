@@ -50,7 +50,7 @@ if rank==0:
     cosmo_params = ["h", "omegaCDM", "omegaB", "n_s", "A_s", "log_axion_frac"]
     parameter_fractional_step_sizes = {"h":0.05, "omegaCDM":0.05, "omegaB":0.05, "n_s":0.005, "A_s":0.005, "log_axion_frac":axion_abundance_fractional_step_sizes}
     parameter_absolute_step_sizes = {"h": 0.0, "omegaCDM": 0.0, "omegaB": 0.0, "n_s": 0.0, "A_s": 0.0, "log_axion_frac": np.zeros(axion_abundance_fractional_step_sizes.shape)}
-    parameter_bounds = {"h": None, "omegaCDM": None, "omegaB": None, "n_s": None, "A_s": None, "log_axion_frac": (-5,0)}
+    parameter_bounds = {"h": None, "omegaCDM": None, "omegaB": None, "n_s": None, "A_s": None, "log_axion_frac": (-11,0)}
     nuisance_params = ["b"]
 
     number_of_parameter_step_sizes = 0
