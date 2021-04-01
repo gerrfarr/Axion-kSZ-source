@@ -68,8 +68,8 @@ class HaloBias(HaloBiasBase):
         self._b_mean = np.array([spIntegrate(lambda logM: self.simple_bias(np.exp(logM), z) * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax))[0] for z in self._z_vals]) / self._nbar
         self._m_mean = np.array([spIntegrate(lambda logM: np.exp(logM) * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax))[0] for z in self._z_vals]) / self._nbar
 
-        self._b_assign_func = lambda z: self._b_mean[np.where(z == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
-        self._m_assign_func = lambda z: self._m_mean[np.where(z == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
+        self._b_assign_func = lambda z: self._b_mean[np.where(z.flatten() == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
+        self._m_assign_func = lambda z: self._m_mean[np.where(z.flatten() == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
 
     def compute(self):
         self.compute_asymptotic()
@@ -83,13 +83,6 @@ class HaloBias(HaloBiasBase):
         self.compute_asymptotic()
 
         if self._window_function=="top_hat" or self._window_function=="gaussian":
-            class interp_emulator:
-                def __init__(self, func):
-                    self.__func = func
-
-                def ev(self, *args):
-                    return self.__func(*args)
-
             self.__interpolator_B = interp_emulator(lambda logk, z: self._b_assign_func(z)*self.window(10**logk*self.radius_of_mass(self._m_assign_func(z))))
             self.__interpolator_N = interp_emulator(lambda logk, z: self.window(10**logk * self.radius_of_mass(self._m_assign_func(z))))
 
@@ -167,3 +160,11 @@ class HaloBiasFFTLog(HaloBias):
         self._k_vals, vals2 = self.__transform(integrand2, extrap=False)
 
         return vals2 / nBarMesh, vals1 / nBarMesh
+
+
+class interp_emulator:
+    def __init__(self, func):
+        self.__func = func
+
+    def ev(self, *args):
+        return self.__func(*args)
