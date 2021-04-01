@@ -41,7 +41,7 @@ if rank==0:
     old_bias=False
     kMin,kMax=1.0e-4,1.0e2
     out_path="/scratch/r/rbond/gfarren/axion_kSZ/fisher_outputs/"
-    prefix="sharpK_5point"
+    prefix="sharpK_5point_FFTLog_approx"
     use_approximations=True
     use_FFTLog=True
 
