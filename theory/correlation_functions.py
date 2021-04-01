@@ -19,6 +19,8 @@ class CorrelationFunctions(object):
         :type cosmo: Cosmology
         """
 
+        assert (rMin >= 1 / kMax)
+
         self.__cosmo = cosmo
         self.__linear_power=linear_power
         self.__growth = growth
