@@ -3,13 +3,14 @@ from ..axion_camb_wrappers.growth_interpolation import GrowthInterpolation
 from ..auxiliary.integration_helper import IntegrationHelper
 from .cosmology import Cosmology
 from .halo_bias_base import HaloBiasBase
+import mcfit
 
 import numpy as np
 from scipy.interpolate import interp1d
 
 class CorrelationFunctions(object):
 
-    def __init__(self, cosmo, linear_power, growth, halo_bias, kMin, kMax, z_vals, rMin, r_vals, integrationHelper, Nr=1024):
+    def __init__(self, cosmo, linear_power, growth, halo_bias, kMin, kMax, z_vals, rMin, integrationHelper, Nk=1024):
         """
 
         :type integrationHelper: IntegrationHelper
@@ -28,12 +29,13 @@ class CorrelationFunctions(object):
 
         self.__kMin = kMin
         self.__kMax = kMax
+        self.__k_vals = np.logspace(np.log10(self.__kMin), np.log10(self.__kMax), Nk)
+        self.__p2xi = mcfit.P2xi(self.__k_vals, lowring=True)
 
         self.__rMin = rMin
 
         self.__z_vals = z_vals
-        self.__r_vals = np.unique(np.concatenate((np.linspace(rMin, np.max(r_vals), Nr), r_vals)))
-        self.__r_selection = np.where(self.__r_vals[:,np.newaxis] == r_vals)[0]
+        self.__r_vals = None
 
         self.__intHelper = integrationHelper
 
@@ -47,7 +49,7 @@ class CorrelationFunctions(object):
 
     def compute(self, unbiased=False, old_bias=False):
         if unbiased:
-            self.__xi_unbiased, dxi_dloga_unbiased, self.__xi, dxi_dloga = self.compute_xi(self.__r_vals, self.__z_vals, deriv=True, unbiased=True, old_bias=old_bias)
+            self.__r_vals, self.__xi_unbiased, dxi_dloga_unbiased, self.__xi, dxi_dloga = self.compute_xi(self.__z_vals, deriv=True, unbiased=True, old_bias=old_bias)
 
             self.__dbarxi_dloga = self.compute_dbarxi_dloga(self.__r_vals, self.__z_vals, dxi_dloga)
             self.__dbarxi_dloga_unbiased = self.compute_dbarxi_dloga(self.__r_vals, self.__z_vals, dxi_dloga_unbiased)
@@ -55,15 +57,12 @@ class CorrelationFunctions(object):
             self.__computed = True
             self.__computed_unbiased = True
 
-            return self.__xi_unbiased[:, self.__r_selection], self.__xi[:, self.__r_selection], self.__dbarxi_dloga_unbiased[:, self.__r_selection], self.__dbarxi_dloga[:, self.__r_selection]
         else:
-            self.__xi, dxi_dloga = self.compute_xi(self.__r_vals, self.__z_vals, deriv=True, unbiased=False, old_bias=old_bias)
+            self.__r_vals, self.__xi, dxi_dloga = self.compute_xi(self.__z_vals, deriv=True, unbiased=False, old_bias=old_bias)
 
             self.__dbarxi_dloga = self.compute_dbarxi_dloga(self.__r_vals, self.__z_vals, dxi_dloga)
 
             self.__computed = True
-
-            return self.__xi[:, self.__r_selection], self.__dbarxi_dloga[:, self.__r_selection]
 
     def get_correlation_functions(self, r_vals, z_vals, unbiased=False):
         z_vals = np.asarray(z_vals)
@@ -103,43 +102,37 @@ class CorrelationFunctions(object):
             else:
                 return out_xi, out_dbarxi_dloga
 
-    def compute_xi(self, r, z, deriv=True, unbiased=False, old_bias=False):
-        eval_vals, weights = self.__intHelper.get_points_weights()
-        xmin_vals, xmax_vals = self.__kMin*r, self.__kMax*r
+    def compute_xi(self, z, deriv=True, unbiased=False, old_bias=False):
+        kMesh, zMesh = np.meshgrid(self.__k_vals, z)
 
-        rMesh, zMesh, dump = np.meshgrid(r, z, weights)
-
-        x_eval_vals = np.outer((xmax_vals - xmin_vals) / 2, eval_vals) + np.outer((xmax_vals + xmin_vals) / 2, np.ones(np.shape(eval_vals)))
-        eval_weights = np.outer((xmax_vals - xmin_vals) / 2, weights)
-
-        xMesh = np.einsum('i, jk->ijk', np.ones(np.shape(z)), x_eval_vals)
-        weightMesh = np.einsum('i, jk->ijk', np.ones(np.shape(z)), eval_weights)
-
-        kMesh = xMesh/rMesh
-
-        integrand_unbiased = xMesh*np.sin(xMesh)*self.__linear_power(kMesh)*self.__growth(kMesh, zMesh)**2*weightMesh
+        linear_power = self.__linear_power(kMesh)*self.__growth(kMesh, zMesh)**2
         if old_bias:
-            integrand_biased = integrand_unbiased * self.__halo_bias(kMesh, zMesh, 2)
+            non_linear_power = linear_power * self.__halo_bias(kMesh, zMesh, 2)
         else:
-            integrand_biased = integrand_unbiased * self.__halo_bias(kMesh, zMesh, 1)**2
+            non_linear_power = linear_power * self.__halo_bias(kMesh, zMesh, 1)**2
 
         if deriv:
-            integrand_deriv_unbiased = integrand_unbiased * self.__growth.f(kMesh, zMesh)
+            linear_deriv = 2 * linear_power * self.__growth.f(kMesh, zMesh)
             if old_bias:
-                integrand_deriv_biased = integrand_unbiased * self.__growth.f(kMesh, zMesh) * self.__halo_bias(kMesh, zMesh, 1)
+                non_linear_deriv = linear_deriv * self.__halo_bias(kMesh, zMesh, 1)
             else:
-                integrand_deriv_biased = integrand_unbiased * self.__growth.f(kMesh, zMesh) * self.__halo_bias(kMesh, zMesh, 1) * self.__halo_bias(kMesh, zMesh, 0)
+                non_linear_deriv = linear_deriv * self.__halo_bias(kMesh, zMesh, 1) * self.__halo_bias(kMesh, zMesh, 0)
 
+        r, nonlin_xi = self.__p2xi(non_linear_power)
         if unbiased:
+            r, lin_xi = self.__p2xi(linear_power)
             if deriv:
-                return np.sum(integrand_unbiased, axis=-1) / (2 * np.pi**2 * r**3), np.sum(integrand_deriv_unbiased, axis=-1) / (np.pi**2 * r**3), np.sum(integrand_biased, axis=-1) / (2 * np.pi**2 * r**3), np.sum(integrand_deriv_biased, axis=-1) / (np.pi**2 * r**3)
+                r, nonlin_dxi = self.__p2xi(non_linear_deriv)
+                r, lin_dxi = self.__p2xi(linear_deriv)
+                return r, lin_xi, lin_dxi, nonlin_xi, nonlin_dxi
             else:
-                return np.sum(integrand_unbiased, axis=-1) / (2*np.pi**2*r**3), np.sum(integrand_biased, axis=-1) / (2*np.pi**2*r**3)
+                return r, lin_xi, nonlin_xi
         else:
             if deriv:
-                return np.sum(integrand_biased, axis=-1) / (2 * np.pi**2 * r**3), np.sum(integrand_deriv_biased, axis=-1) / (np.pi**2 * r**3)
+                r, nonlin_dxi = self.__p2xi(non_linear_deriv)
+                return r, nonlin_xi, nonlin_dxi
             else:
-                return np.sum(integrand_biased, axis=-1) / (2 * np.pi**2 * r**3)
+                return r, nonlin_xi
 
     def compute_dbarxi_dloga(self, r, z, dxi_dloga_input):
         assert(dxi_dloga_input.shape == (len(z), len(r)))

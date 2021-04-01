@@ -34,7 +34,7 @@ axion_masses = [5.0e-27, 5.0e-26, 1.0e-25, 1.0e-24]#[1.0e-27, 1.0e-26, 1.0e-25, 
 
 if rank==0:
     delta_r = 2.0
-    rMin=1.0e-3
+    rMin=1.0e-2
     r_vals = np.arange(20.0, 180.0, delta_r)
     survey=StageIV(Cosmology.generate())
     window="sharp_k"
@@ -42,6 +42,8 @@ if rank==0:
     kMin,kMax=1.0e-4,1.0e2
     out_path="/scratch/r/rbond/gfarren/axion_kSZ/fisher_outputs/"
     prefix="sharpK_5point"
+    use_approximations=True
+    use_FFTLog=True
 
     axion_abundances = np.array([1.0e-04, 1.6e-04, 2.5e-04, 4.0e-04, 6.3e-04, 1.0e-03, 1.6e-03, 2.5e-03, 4.0e-03, 6.3e-03, 1.0e-02, 1.6e-02, 2.5e-02, 4.0e-02, 5.3e-02, 6.3e-02, 1.0e-01, 1.1e-01, 1.6e-01, 2.1e-01, 2.5e-01, 2.6e-01, 3.2e-01, 3.7e-01, 4.0e-01, 4.2e-01, 4.7e-01, 5.3e-01, 5.8e-01, 6.3e-01, 6.8e-01, 7.4e-01, 7.9e-01, 8.4e-01, 8.9e-01, 9.5e-01])
 
@@ -88,7 +90,7 @@ if rank==0:
             growth = wrapper.get_growth()
             cosmo.set_H_interpolation(wrapper.get_hubble())
 
-            id = p_eval.add_job(compute_mean_pairwise_velocity, r_vals, rMin, cosmo, lin_power, growth, survey, window=window, old_bias=old_bias, jenkins_mass=False, integrationHelper=intHelper, kMin=kMin, kMax=kMax, do_unbiased=False, get_correlation_functions=False)
+            id = p_eval.add_job(compute_mean_pairwise_velocity, r_vals, rMin, cosmo, lin_power, growth, survey, window=window, old_bias=old_bias, jenkins_mass=False, integrationHelper=intHelper, kMin=kMin, kMax=kMax, do_unbiased=False, get_correlation_functions=False, use_approximations=use_approximations, use_FFTLog=use_FFTLog)
         else:
             id = p_eval.add_job(lambda survey, r_vals: np.full((len(survey.center_z), len(r_vals)), np.nan), survey, r_vals)
 
@@ -114,7 +116,7 @@ if rank==0:
         growth = wrapper.get_growth()
         cosmo.set_H_interpolation(wrapper.get_hubble())
 
-        v, xi, dbarxi_dloga = compute_mean_pairwise_velocity(r_vals, rMin, cosmo, lin_power, growth, survey, window=window, old_bias=old_bias, jenkins_mass=False, integrationHelper=intHelper, kMin=kMin, kMax=kMax, do_unbiased=False, get_correlation_functions=True)
+        v, xi, dbarxi_dloga = compute_mean_pairwise_velocity(r_vals, rMin, cosmo, lin_power, growth, survey, window=window, old_bias=old_bias, jenkins_mass=False, integrationHelper=intHelper, kMin=kMin, kMax=kMax, do_unbiased=False, get_correlation_functions=True, use_approximations=use_approximations, use_FFTLog=use_FFTLog)
 
         return v*(1-xi)/(1+xi)
 

@@ -4,6 +4,7 @@ from ..axion_camb_wrappers.power_interpolation import LinearPowerInterpolation
 from ..axion_camb_wrappers.growth_interpolation import GrowthInterpolation
 from ..auxiliary.window_functions import WindowFunctions
 from ..auxiliary.integration_helper import IntegrationHelper
+from ..auxiliary.sharp_k_sq_transform import SharpKVar
 from .cosmology import Cosmology
 import numpy as np
 from scipy.interpolate import interp1d, RectBivariateSpline
@@ -29,7 +30,7 @@ class SigmaInterpolatorFFTLog(object):
         self.radius_of_mass = None
         self.mass_of_radius = None
 
-        assert (window_function == 'top_hat' or window_function == 'gaussian')
+        #assert (window_function == 'top_hat' or window_function == 'gaussian')
 
         WindowFunctions.set_window_functions(self, window_function, self.__cosmo)
 
@@ -44,6 +45,9 @@ class SigmaInterpolatorFFTLog(object):
         elif self.__window_function == 'gaussian':
             self.__transform = mcfit.GaussVar(self.__k_vals, lowring=False)
             self.__transform_deriv = mcfit.GaussVar(self.__k_vals, lowring=False, deriv=1j)
+        elif self.__window_function == 'sharp_k':
+            self.__transform = SharpKVar(self.__k_vals, lowring=False)
+            self.__transform_deriv = SharpKVar(self.__k_vals, lowring=False, deriv=1j)
 
         self.__sigma_sq_vals = None
         self.__dsigma_sq_dr_vals = None
