@@ -16,6 +16,8 @@ mpi4py
 
 pandas
 
+mcfit (for FFTLog intergal transforms)
+
 ## Settings to edit
 
 line 14 of fisher_analysis.run_axion_fisher_forecast.py: Edit to include path to this package
