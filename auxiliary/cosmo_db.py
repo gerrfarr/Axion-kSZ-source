@@ -6,7 +6,11 @@ from .helper_functions import generate_cosmo_identifier
 
 class CosmoDB(object):
 
-    def __init__(self):
+    def __init__(self, cosmo_db_path = None):
+        if cosmo_db_path is None:
+            self.__cosmo_database = cosmo_database
+        else:
+            self.__cosmo_database = cosmo_db_path
         dtype = {'ID':np.int, 'path_root':'str', 'logs_path':'str', 'hash_value':'str', 'ran_TF':bool, 'successful_TF':bool, 'h':np.float64, 'omegaCDM':np.float64, 'omegaB':np.float64, 'omega_axion':np.float64, 'm_axion':np.float64, 'n_s':np.float64, 'A_s':np.float64, 'read_H':bool}
         columns = ['ID', 'path_root', 'logs_path', 'hash_value', 'ran_TF', 'successful_TF', 'h', 'omegaCDM', 'omegaB', 'omega_axion', 'm_axion', 'n_s', 'A_s', 'read_H']
         try:
@@ -20,10 +24,10 @@ class CosmoDB(object):
             self.__db = self.__db.set_index('ID')
 
     def load(self):
-        self.__db = pd.read_csv(cosmo_database)
+        self.__db = pd.read_csv(self.__cosmo_database)
 
     def save(self):
-        self.__db.to_csv(cosmo_database)
+        self.__db.to_csv(self.__cosmo_database)
 
     def add(self, cosmo):
         """
