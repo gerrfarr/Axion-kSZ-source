@@ -60,8 +60,8 @@ class AxionCAMBWrapper(object):
     def get_linear_power(self, extrap_kmax=None, extrap_kmin=None):
         return LinearPowerInterpolation(self.__outpath+self.__fileroot+"_matterpower_out.dat", extrap_kmax=extrap_kmax, extrap_kmin=extrap_kmin)
 
-    def get_growth(self):
-        return GrowthInterpolation(self.__outpath+self.__fileroot)
+    def get_growth(self, degree=3, smoothing=0.0):
+        return GrowthInterpolation(self.__outpath+self.__fileroot, degree, smoothing)
 
     def get_hubble(self):
         return HubbleInterpolation(self.__outpath+self.__fileroot+"_a_vals.dat")
