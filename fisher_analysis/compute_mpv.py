@@ -62,7 +62,7 @@ def compute_mean_pairwise_velocity(r_vals, rMin, cosmo, lin_power, growth, surve
     rMesh,zMesh = np.meshgrid(r_vals, survey.center_z)
     if do_unbiased:
         corr.compute(unbiased=True, old_bias=old_bias)
-        xi_unbiased, xi, dbarxi_dloga_unbiased, dbarxi_dloga =  corr.get_correlation_functions(rMesh, zMesh, unbiased=True)
+        xi_unbiased, xi, dbarxi_dloga_unbiased, dbarxi_dloga = corr.get_correlation_functions(rMesh, zMesh, unbiased=True)
         v = r_vals * 100 * dbarxi_dloga / (3 * (1 + xi))
         v_dm = r_vals * 100 * dbarxi_dloga_unbiased / (3 * (1 + xi_unbiased))
         if get_correlation_functions:
