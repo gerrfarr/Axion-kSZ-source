@@ -1,4 +1,4 @@
-from ..theory.cosmology import Cosmology
+from ..theory.cosmology import Cosmology,CosmologyCustomH
 from ..theory.sigma_interpolation import SigmaInterpolator
 from ..theory.sigma_interpolation_FFTLog import SigmaInterpolatorFFTLog
 from ..theory.halo_bias import HaloBias
@@ -9,6 +9,7 @@ from ..theory.correlation_functions_FFTLog import CorrelationFunctions as Correl
 
 from ..axion_camb_wrappers.growth_interpolation import GrowthInterpolation
 from ..axion_camb_wrappers.power_interpolation import LinearPowerInterpolation
+from ..axion_camb_wrappers.run_axion_camb import AxionCAMBWrapper
 
 from ..auxiliary.integration_helper import IntegrationHelper
 from ..auxiliary.survey_helper import SurveyType
@@ -16,17 +17,19 @@ from ..auxiliary.survey_helper import SurveyType
 import numpy as np
 
 
-def compute_mean_pairwise_velocity(r_vals, rMin, cosmo, lin_power, growth, survey, window="gaussian", old_bias=False, jenkins_mass=False, integrationHelper=None, kMin=1.0e-4, kMax=1.0e2, do_unbiased=False, get_correlation_functions=False, use_approximations=False, use_FFTLog=False):
+def compute_mean_pairwise_velocity(r_vals, rMin, cosmo, axionCAMB_wrapper, survey, window="gaussian", old_bias=False, jenkins_mass=False, integrationHelper=None, kMin=1.0e-4, kMax=1.0e2, do_unbiased=False, get_correlation_functions=False, use_approximations=False, use_FFTLog=False):
     """
 
     Parameters
     ----------
+    axionCAMB_wrapper : AxionCAMBWrapper
     survey : SurveyType
-    growth : GrowthInterpolation
-    lin_power : LinearPowerInterpolation
-    cosmo : Cosmology
+    cosmo : CosmologyCustomH
     integrationHelper : IntegrationHelper
     """
+    lin_power = axionCAMB_wrapper.get_linear_power()
+    growth = axionCAMB_wrapper.get_growth()
+    cosmo.set_H_interpolation(axionCAMB_wrapper.get_hubble())
 
     if integrationHelper is None:
         integrationHelper = IntegrationHelper(1024)

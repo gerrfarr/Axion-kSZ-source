@@ -13,7 +13,11 @@ from ..axion_camb_wrappers.power_interpolation import LinearPowerInterpolation
 from ..auxiliary.integration_helper import IntegrationHelper
 from ..auxiliary.survey_helper import SurveyType
 
-def compute_covariance_matrix(r_vals, rMin, deltaR, cosmo, lin_power, growth, survey, window="gaussian", old_bias=False, jenkins_mass=False, integrationHelper=None, kMin=1.0e-4, kMax=1.0e2):
+def compute_covariance_matrix(r_vals, rMin, deltaR, cosmo, axionCAMB_wrapper, survey, window="gaussian", old_bias=False, jenkins_mass=False, integrationHelper=None, kMin=1.0e-4, kMax=1.0e2):
+
+    lin_power = axionCAMB_wrapper.get_linear_power()
+    growth = axionCAMB_wrapper.get_growth()
+    cosmo.set_H_interpolation(axionCAMB_wrapper.get_hubble())
 
     if integrationHelper is None:
         integrationHelper = IntegrationHelper(1024)
