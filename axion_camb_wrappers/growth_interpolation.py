@@ -3,7 +3,7 @@ from scipy.interpolate import RectBivariateSpline
 
 class GrowthInterpolation(object):
 
-    def __init__(self, file_root, degree=3, smoothing=0.0):
+    def __init__(self, file_root, degree=3, smoothing=0.0, w=1e-4):
         self.__f_data = np.loadtxt(file_root + '_devolution.dat')
         self.__delta_data = np.loadtxt(file_root + '_evolution.dat')
         a_data = np.loadtxt(file_root + '_a_vals.dat')
@@ -11,13 +11,27 @@ class GrowthInterpolation(object):
         assert (a_data[-1, 0] == 1.0)
         self.__k_vals = np.loadtxt(file_root + '_matterpower_out.dat')[:, 0]
 
-        normalized_dataset = self.__delta_data / np.meshgrid(self.__a_vals, self.__delta_data[:, -1])[1]
+        """normalized_dataset = self.__delta_data / np.meshgrid(self.__a_vals, self.__delta_data[:, -1])[1]
 
-        G_interpolation = RectBivariateSpline(np.log10(self.__k_vals), np.log10(self.__a_vals), normalized_dataset, bbox=[min(np.log10(self.__k_vals)), max(np.log10(self.__k_vals)), min(np.log10(self.__a_vals)), max(np.log10(self.__a_vals))], kx=degree, ky=degree, s=smoothing)
-        self.__G_func = lambda k, a: np.squeeze(G_interpolation.ev(np.log10(k), np.log10(a)))
+        self.__G_interpolation = RectBivariateSpline(np.log(self.__k_vals), np.log(self.__a_vals), normalized_dataset, bbox=[min(np.log(self.__k_vals)), max(np.log(self.__k_vals)), min(np.log(self.__a_vals)), max(np.log(self.__a_vals))], kx=degree, ky=degree, s=smoothing)
+        self.__G_func = lambda k, a: np.squeeze(self.__G_interpolation.ev(np.log(k), np.log(a)))"""
 
-        f_interpolation = RectBivariateSpline(np.log10(self.__k_vals), np.log10(self.__a_vals), self.__f_data, bbox=[min(np.log10(self.__k_vals)), max(np.log10(self.__k_vals)), min(np.log10(self.__a_vals)), max(np.log10(self.__a_vals))], kx=degree, ky=degree, s=smoothing)
-        self.__f_func = lambda k, a: np.squeeze(f_interpolation.ev(np.log10(k), np.log10(a)))
+        self.__f_interpolation = RectBivariateSpline(np.log(self.__k_vals), np.log(self.__a_vals), self.__f_data, bbox=[min(np.log(self.__k_vals)), max(np.log(self.__k_vals)), min(np.log(self.__a_vals)), max(np.log(self.__a_vals))], kx=degree, ky=degree, s=smoothing)
+        self.__f_func = lambda k, a: np.squeeze(self.__f_interpolation.ev(np.log(k), np.log(a)))
+
+        self.__logD_norm_vals = np.zeros((len(self.__k_vals), len(self.__a_vals)))
+        for i, k in enumerate(self.__k_vals):
+            for j, a in enumerate(self.__a_vals):
+                if i!=0 and i!=len(self.__k_vals)-1:
+                    self.__logD_norm_vals[i, j] = self.__f_interpolation.integral(np.log(k) - w, np.log(k) + w, 0, np.log(a)) / (2 * w)
+                elif i==0:
+                    self.__logD_norm_vals[i, j] = self.__f_interpolation.integral(np.log(k), np.log(k) + w, 0, np.log(a)) / w
+                elif i==len(self.__k_vals)-1:
+                    self.__logD_norm_vals[i, j] = self.__f_interpolation.integral(np.log(k) - w, np.log(k), 0, np.log(a)) / w
+
+
+        self.__G_interpolation = RectBivariateSpline(np.log(self.__k_vals), np.log(self.__a_vals), self.__logD_norm_vals, bbox=[min(np.log(self.__k_vals)), max(np.log(self.__k_vals)), min(np.log(self.__a_vals)), max(np.log(self.__a_vals))], kx=degree, ky=degree, s=smoothing)
+        self.__G_func = lambda k, a: np.squeeze(np.exp(self.__G_interpolation.ev(np.log(k), np.log(a))))
 
     def __call__(self, k, z):
         return self.__G_func(k, 1/(1+z))
