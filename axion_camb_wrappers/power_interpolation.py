@@ -47,4 +47,8 @@ class LinearPowerInterpolation(object):
         :param k: k in units of h/Mpc
         :return: present day linear power spectrum in units of (h^{-1} Mpc)^3
         """
-        return np.exp(self.__Pk0_interp(np.log(k)))
+        try:
+            return np.exp(self.__Pk0_interp(np.log(k)))
+        except ValueError as ex:
+            print(ex)
+            print(np.min(k), np.max(k))

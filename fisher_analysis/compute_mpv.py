@@ -27,7 +27,7 @@ def compute_mean_pairwise_velocity(r_vals, rMin, cosmo, axionCAMB_wrapper, surve
     cosmo : CosmologyCustomH
     integrationHelper : IntegrationHelper
     """
-    lin_power = axionCAMB_wrapper.get_linear_power()
+    lin_power = axionCAMB_wrapper.get_linear_power(extrap_kmin=1e-5, extrap_kmax=1e3)
     growth = axionCAMB_wrapper.get_growth()
     cosmo.set_H_interpolation(axionCAMB_wrapper.get_hubble())
 
