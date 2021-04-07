@@ -8,38 +8,38 @@ class LinearPowerInterpolation(object):
 
         kmax = np.max(P_CAMB[:, 0])
         kmin = np.min(P_CAMB[:, 0])
-        logk = np.log(P_CAMB[:, 0])
-        logP = np.log(P_CAMB[:, 1])
+        self.__logk = np.log(P_CAMB[:, 0])
+        self.__logP = np.log(P_CAMB[:, 1])
         if extrap_kmax and extrap_kmax > kmax:
-            logk = np.hstack([logk, np.log(kmax) * 0.1 + np.log(extrap_kmax) * 0.9,np.log(extrap_kmax)])
-            logPnew = np.empty((len(logP) + 2))
-            logPnew[:-2] = logP
-            diff = (logPnew[-3] - logPnew[-4]) / (logk[-3] - logk[-4])
+            self.__logk = np.hstack([self.__logk, np.log(kmax) * 0.1 + np.log(extrap_kmax) * 0.9,np.log(extrap_kmax)])
+            logPnew = np.empty((len(self.__logP) + 2))
+            logPnew[:-2] = self.__logP
+            diff = (logPnew[-3] - logPnew[-4]) / (self.__logk[-3] - self.__logk[-4])
             if np.any(diff) < 0:
                 raise ValueError("No log extrapolation possible! divergent behavior")
 
-            delta = diff * (logk[-1] - logk[-3])
+            delta = diff * (self.__logk[-1] - self.__logk[-3])
             logPnew[-1] = logPnew[-3] + delta
             logPnew[-2] = logPnew[-3] + delta * 0.9
 
-            logP=logPnew
+            self.__logP=logPnew
 
         if extrap_kmin and extrap_kmin < kmin:
-            logk = np.hstack([np.log(extrap_kmin), np.log(kmin) * 0.1 + np.log(extrap_kmin) * 0.9, logk])
+            self.__logk = np.hstack([np.log(extrap_kmin), np.log(kmin) * 0.1 + np.log(extrap_kmin) * 0.9, self.__logk])
 
-            logPnew = np.empty((len(logP) + 2))
-            logPnew[2:] = logP
-            diff = (logPnew[3] - logPnew[2]) / (logk[3] - logk[2])
+            logPnew = np.empty((len(self.__logP) + 2))
+            logPnew[2:] = self.__logP
+            diff = (logPnew[3] - logPnew[2]) / (self.__logk[3] - self.__logk[2])
             if np.any(diff) < 0:
                 raise ValueError("No log extrapolation possible! divergent behavior")
 
-            delta = diff * (logk[0] - logk[2])
+            delta = diff * (self.__logk[0] - self.__logk[2])
             logPnew[0] = logPnew[2] + delta
             logPnew[1] = logPnew[2] + delta * 0.9
 
-            logP = logPnew
+            self.__logP = logPnew
 
-        self.__Pk0_interp = interpolate(logk, logP)
+        self.__Pk0_interp = interpolate(self.__logk, self.__logP)
 
     def __call__(self, k):
         """
