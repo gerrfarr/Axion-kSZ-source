@@ -92,6 +92,12 @@ class Cosmology(object):
     def omegaDM(self):
         return self.omegaM-self.omegaB
 
+    @omegaDM.setter
+    def omegaDM(self, new):
+        axion_frac = self.axion_frac
+        self.__omega_cdm = (1-axion_frac)*new
+        self.__omega_axion = axion_frac*new
+
     @property
     def OmegaCDM(self):
         return self.__omega_cdm / self.__h**2
