@@ -51,10 +51,10 @@ def compute_mean_pairwise_velocity(r_vals, rMin, cosmo, axionCAMB_wrapper, surve
     else:
         halo_bias = HaloBiasNew(cosmo, sigmaInt, mass_function, survey.mMin, survey.mMax, kMin, kMax, survey.center_z, integrationHelper, Nk=1024, window_function=window)
 
-    if not use_approximations:
-        halo_bias.compute()
-    else:
+    if use_approximations and not old_bias:
         halo_bias.compute_approximation()
+    else:
+        halo_bias.compute()
 
 
     if use_FFTLog:

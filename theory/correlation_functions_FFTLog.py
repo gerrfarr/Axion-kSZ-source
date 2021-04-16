@@ -44,6 +44,11 @@ class CorrelationFunctions(object):
         self.__dbarxi_dloga_unbiased = None
         self.__dbarxi_dloga = None
 
+        self.__xi_unbiased_interp = None
+        self.__xi_interp = None
+        self.__dbarxi_dloga_unbiased_interp = None
+        self.__dbarxi_dloga_interp = None
+
         self.__computed=False
         self.__computed_unbiased = False
 
@@ -57,12 +62,18 @@ class CorrelationFunctions(object):
             self.__computed = True
             self.__computed_unbiased = True
 
+            self.__xi_unbiased_interp = interp1d(self.__r_vals, self.__xi_unbiased)
+            self.__dbarxi_dloga_unbiased_interp = interp1d(self.__r_vals, self.__dbarxi_dloga_unbiased)
+
         else:
             self.__r_vals, self.__xi, dxi_dloga = self.compute_xi(self.__z_vals, deriv=True, unbiased=False, old_bias=old_bias)
 
             self.__dbarxi_dloga = self.compute_dbarxi_dloga(self.__r_vals, self.__z_vals, dxi_dloga)
 
             self.__computed = True
+
+        self.__xi_interp = interp1d(self.__r_vals, self.__xi)
+        self.__dbarxi_dloga_interp = interp1d(self.__r_vals, self.__dbarxi_dloga)
 
     def get_correlation_functions(self, r_vals, z_vals, unbiased=False):
         z_vals = np.asarray(z_vals)
@@ -92,12 +103,12 @@ class CorrelationFunctions(object):
                 return out_xi, out_dbarxi_dloga
         else:
             rind = np.arange(0, len(r_flat), 1, dtype=np.int)
-            out_xi = interp1d(self.__r_vals, self.__xi)(r_flat)[zindexa[zindexb.argsort()], rind].reshape(shape)
-            out_dbarxi_dloga = interp1d(self.__r_vals, self.__dbarxi_dloga)(r_flat)[zindexa[zindexb.argsort()], rind].reshape(shape)
+            out_xi = self.__xi_interp(r_flat)[zindexa[zindexb.argsort()], rind].reshape(shape)
+            out_dbarxi_dloga = self.__dbarxi_dloga_interp(r_flat)[zindexa[zindexb.argsort()], rind].reshape(shape)
 
             if unbiased:
-                out_xi_unbiased = interp1d(self.__r_vals, self.__xi_unbiased)(r_flat)[zindexa[zindexb.argsort()], rind].reshape(shape)
-                out_dbarxi_dloga_unbiased = interp1d(self.__r_vals, self.__dbarxi_dloga_unbiased)(r_flat)[zindexa[zindexb.argsort()], rind].reshape(shape)
+                out_xi_unbiased = self.__xi_unbiased_interp(r_flat)[zindexa[zindexb.argsort()], rind].reshape(shape)
+                out_dbarxi_dloga_unbiased = self.__dbarxi_dloga_unbiased_interp(r_flat)[zindexa[zindexb.argsort()], rind].reshape(shape)
                 return out_xi_unbiased, out_xi, out_dbarxi_dloga_unbiased, out_dbarxi_dloga
             else:
                 return out_xi, out_dbarxi_dloga
