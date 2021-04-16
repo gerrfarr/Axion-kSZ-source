@@ -52,7 +52,9 @@ class Covariance(object):
         self.__bin_volumes = np.empty(Nz)
         self.__pair_numbers = np.empty((Nz, len(self.__r_vals)))
 
-        self.__covariance = None
+        self.__cov_cosmic = None
+        self.__cov_shot = None
+        self.__cov_cross = None
 
     def comoving_distance(self, z):
         return 3000.0 / self.__cosmo.h * self.__intHelper.integrate(lambda zp: 1 / (self.__cosmo.E(zp)), 0, z)
@@ -113,16 +115,20 @@ class Covariance(object):
         windowMesh2 = self.binned_window_function(kMesh, r2Mesh - self.__deltaR / 2, r2Mesh + self.__deltaR / 2)
 
         if not self.__old_bias:
-            integrand = kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (cosmic_variance*self.__growth(kMesh, zIntMesh)**2 * self.__linear_power(kMesh) * self.__bias(kMesh,zIntMesh, 1) * self.__bias(kMesh,zIntMesh, 0) + shot_noise/number_density_mesh)**2*windowMesh1*windowMesh2*weightMesh
-            #integrand = kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (1 / number_density_mesh)**2 * windowMesh1 * windowMesh2 * weightMesh
-            #integrand = kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (self.__growth(kMesh, zIntMesh)**2 * self.__linear_power(kMesh) * self.__bias(kMesh, zIntMesh, 1) * self.__bias(kMesh, zIntMesh, 0))**2 * windowMesh1 * windowMesh2 * weightMesh
+            integrand_cosmic = kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (self.__growth(kMesh, zIntMesh)**2 * self.__linear_power(kMesh) * self.__bias(kMesh,zIntMesh, 1) * self.__bias(kMesh,zIntMesh, 0))**2*windowMesh1*windowMesh2*weightMesh
+            integrand_shot = kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (1 / number_density_mesh)**2 * windowMesh1 * windowMesh2 * weightMesh
+            integrand_cross = 2 * kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (self.__growth(kMesh, zIntMesh)**2 * self.__linear_power(kMesh) * self.__bias(kMesh, zIntMesh, 1) * self.__bias(kMesh, zIntMesh, 0) / number_density_mesh) * windowMesh1 * windowMesh2 * weightMesh
         else:
-            integrand = kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (cosmic_variance*self.__growth(kMesh, zIntMesh)**2 * self.__linear_power(kMesh) * self.__bias(kMesh, zIntMesh, 1) + shot_noise / number_density_mesh)**2 * windowMesh1 * windowMesh2 * weightMesh
+            integrand_cosmic = kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (self.__growth(kMesh, zIntMesh)**2 * self.__linear_power(kMesh) * self.__bias(kMesh, zIntMesh, 1))**2 * windowMesh1 * windowMesh2 * weightMesh
+            integrand_shot = kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (1 / number_density_mesh)**2 * windowMesh1 * windowMesh2 * weightMesh
+            integrand_cross = 2 * kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (self.__growth(kMesh, zIntMesh)**2 * self.__linear_power(kMesh) * self.__bias(kMesh, zIntMesh, 1) / number_density_mesh) * windowMesh1 * windowMesh2 * weightMesh
             #integrand = kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (1 / number_density_mesh)**2 * windowMesh1 * windowMesh2 * weightMesh
             #integrand = kMesh * self.__growth.f(kMesh, zIntMesh)**2 * (self.__growth(kMesh, zIntMesh)**2 * self.__linear_power(kMesh) * self.__bias(kMesh, zIntMesh, 1))**2 * windowMesh1 * windowMesh2 * weightMesh
-        integral = np.sum(integrand, axis=-1)
+        integral_cosmic = prefactors*np.sum(integrand_cosmic, axis=-1)
+        integral_shot = prefactors*np.sum(integrand_shot, axis=-1)
+        integral_cross = prefactors*np.sum(integrand_cross, axis=-1)
 
-        output = prefactors*integral
+        output=cosmic_variance * integrand_cosmic + shot_noise * integrand_shot + cosmic_variance*shot_noise*integrand_cross
 
         #reshaping into covariance matrix
         a = raw_pairs[:, 0] == r_pairs[:, 0, np.newaxis]
@@ -132,18 +138,21 @@ class Covariance(object):
 
         r_ia, r_ib = np.where(a*b+c*d)
         if shot_noise and cosmic_variance:
-            self.__covariance = output[:,r_ia[r_ib.argsort()]].reshape(len(self.__center_z), len(self.__r_vals), len(self.__r_vals))
+            self.__cov_cosmic = integral_cosmic[:,r_ia[r_ib.argsort()]].reshape(len(self.__center_z), len(self.__r_vals), len(self.__r_vals))
+            self.__cov_shot = integral_shot[:, r_ia[r_ib.argsort()]].reshape(len(self.__center_z), len(self.__r_vals), len(self.__r_vals))
+            self.__cov_cross = integral_cross[:, r_ia[r_ib.argsort()]].reshape(len(self.__center_z), len(self.__r_vals), len(self.__r_vals))
         return output[:,r_ia[r_ib.argsort()]].reshape(len(self.__center_z), len(self.__r_vals), len(self.__r_vals))
 
     def noise_terms(self):
         dump, sigma_vMesh = np.meshgrid(self.__r_vals, self.__sigma_v_vals)
         return 2*sigma_vMesh**2/self.__pair_numbers
 
-    def full_covariance(self):
+    def full_covariance(self, cosmic_variance=True, shot_noise=True, measurement_noise=True):
         assert(self.__covariance is not None)
 
         noise = np.zeros((self.__covariance.shape))
-        for i in range(self.__Nz):
-            np.fill_diagonal(noise[i], self.noise_terms()[i])
+        if measurement_noise:
+            for i in range(self.__Nz):
+                np.fill_diagonal(noise[i], self.noise_terms()[i])
 
-        return self.__covariance+noise
+        return cosmic_variance*self.__cov_cosmic+shot_noise*self.__cov_shot+cosmic_variance*shot_noise*self.__cov_cross+measurement_noise*noise

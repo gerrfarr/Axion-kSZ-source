@@ -13,7 +13,7 @@ from ..axion_camb_wrappers.power_interpolation import LinearPowerInterpolation
 from ..auxiliary.integration_helper import IntegrationHelper
 from ..auxiliary.survey_helper import SurveyType
 
-def compute_covariance_matrix(r_vals, rMin, deltaR, cosmo, axionCAMB_wrapper, survey, window="gaussian", old_bias=False, jenkins_mass=False, integrationHelper=None, kMin=1.0e-4, kMax=1.0e2):
+def compute_covariance_matrix(r_vals, rMin, deltaR, cosmo, axionCAMB_wrapper, survey, window="gaussian", old_bias=False, jenkins_mass=False, integrationHelper=None, kMin=1.0e-4, kMax=1.0e2, provide_covmat_object=False):
 
     lin_power = axionCAMB_wrapper.get_linear_power()
     growth = axionCAMB_wrapper.get_growth()
@@ -44,4 +44,7 @@ def compute_covariance_matrix(r_vals, rMin, deltaR, cosmo, axionCAMB_wrapper, su
     cov.pre_compute()
     cov.compute()
 
-    return cov.full_covariance()
+    if provide_covmat_object:
+        return cov
+    else:
+        return cov.full_covariance()
