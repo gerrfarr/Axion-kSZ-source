@@ -147,9 +147,8 @@ class Covariance(object):
         return 2*sigma_vMesh**2/self.__pair_numbers
 
     def full_covariance(self, cosmic_variance=True, shot_noise=True, measurement_noise=True):
-        assert(self.__covariance is not None)
 
-        noise = np.zeros((self.__covariance.shape))
+        noise = np.zeros((self.__cov_cosmic.shape))
         if measurement_noise:
             for i in range(self.__Nz):
                 np.fill_diagonal(noise[i], self.noise_terms()[i])
