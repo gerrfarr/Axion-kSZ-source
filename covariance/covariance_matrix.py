@@ -137,11 +137,10 @@ class Covariance(object):
         d = raw_pairs[:, 1] == r_pairs[:, 0, np.newaxis]
 
         r_ia, r_ib = np.where(a*b+c*d)
-        if shot_noise and cosmic_variance:
-            self.__cov_cosmic = integral_cosmic[:,r_ia[r_ib.argsort()]].reshape(len(self.__center_z), len(self.__r_vals), len(self.__r_vals))
-            self.__cov_shot = integral_shot[:, r_ia[r_ib.argsort()]].reshape(len(self.__center_z), len(self.__r_vals), len(self.__r_vals))
-            self.__cov_cross = integral_cross[:, r_ia[r_ib.argsort()]].reshape(len(self.__center_z), len(self.__r_vals), len(self.__r_vals))
-        return output[:,r_ia[r_ib.argsort()]].reshape(len(self.__center_z), len(self.__r_vals), len(self.__r_vals))
+
+        self.__cov_cosmic = integral_cosmic[:,r_ia[r_ib.argsort()]].reshape(len(self.__center_z), len(self.__r_vals), len(self.__r_vals))
+        self.__cov_shot = integral_shot[:, r_ia[r_ib.argsort()]].reshape(len(self.__center_z), len(self.__r_vals), len(self.__r_vals))
+        self.__cov_cross = integral_cross[:, r_ia[r_ib.argsort()]].reshape(len(self.__center_z), len(self.__r_vals), len(self.__r_vals))
 
     def noise_terms(self):
         dump, sigma_vMesh = np.meshgrid(self.__r_vals, self.__sigma_v_vals)
