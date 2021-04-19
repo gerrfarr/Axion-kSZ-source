@@ -17,7 +17,7 @@ from ..auxiliary.survey_helper import SurveyType
 import numpy as np
 
 
-def compute_mean_pairwise_velocity(r_vals, rMin, cosmo, axionCAMB_wrapper, survey, window="gaussian", old_bias=False, jenkins_mass=False, integrationHelper=None, kMin=1.0e-4, kMax=1.0e2, do_unbiased=False, get_correlation_functions=False, use_approximations=False, use_FFTLog=False):
+def compute_mean_pairwise_velocity(r_vals, rMin, cosmo, axionCAMB_wrapper, survey, window="gaussian", sigma_window=None, old_bias=False, jenkins_mass=False, integrationHelper=None, kMin=1.0e-4, kMax=1.0e2, do_unbiased=False, get_correlation_functions=False, use_approximations=False, use_FFTLog=False):
     """
 
     Parameters
@@ -34,11 +34,14 @@ def compute_mean_pairwise_velocity(r_vals, rMin, cosmo, axionCAMB_wrapper, surve
     if integrationHelper is None:
         integrationHelper = IntegrationHelper(1024)
 
+    if sigma_window is None:
+        sigma_window=window
+
     if use_FFTLog:
-        sigmaInt = SigmaInterpolatorFFTLog(cosmo, lin_power, growth, survey.center_z, kMin, kMax, Nr=1024, window_function=window)
+        sigmaInt = SigmaInterpolatorFFTLog(cosmo, lin_power, growth, survey.center_z, kMin, kMax, Nr=1024, window_function=sigma_window)
         sigmaInt.compute(do_dr=True, do_dloga=False)
     else:
-        sigmaInt = SigmaInterpolator(cosmo, lin_power, growth, survey.mMin, survey.mMax, survey.center_z, integrationHelper, Nr=1024, window_function=window)
+        sigmaInt = SigmaInterpolator(cosmo, lin_power, growth, survey.mMin, survey.mMax, survey.center_z, integrationHelper, Nr=1024, window_function=sigma_window)
         sigmaInt.compute(kMin, kMax, do_dr=True, do_dloga=False)
 
     if jenkins_mass:

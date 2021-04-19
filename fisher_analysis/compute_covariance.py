@@ -15,7 +15,7 @@ from ..auxiliary.integration_helper import IntegrationHelper
 from ..auxiliary.survey_helper import SurveyType
 from ..covariance.covariance_matrix import Covariance
 
-def compute_covariance_matrix(r_vals, rMin, deltaR, cosmo, axionCAMB_wrapper, survey, window="gaussian", old_bias=False, jenkins_mass=False, integrationHelper=None, kMin=1.0e-4, kMax=1.0e2, provide_covmat_object=False, use_FFTLog=False, use_approximations=False):
+def compute_covariance_matrix(r_vals, rMin, deltaR, cosmo, axionCAMB_wrapper, survey, window="gaussian", sigma_window=None, old_bias=False, jenkins_mass=False, integrationHelper=None, kMin=1.0e-4, kMax=1.0e2, provide_covmat_object=False, use_FFTLog=False, use_approximations=False):
 
     lin_power = axionCAMB_wrapper.get_linear_power()
     growth = axionCAMB_wrapper.get_growth()
@@ -24,11 +24,14 @@ def compute_covariance_matrix(r_vals, rMin, deltaR, cosmo, axionCAMB_wrapper, su
     if integrationHelper is None:
         integrationHelper = IntegrationHelper(1024)
 
+    if sigma_window is None:
+        sigma_window=window
+
     if use_FFTLog:
-        sigmaInt = SigmaInterpolatorFFTLog(cosmo, lin_power, growth, survey.center_z, kMin, kMax, Nr=1024, window_function=window)
+        sigmaInt = SigmaInterpolatorFFTLog(cosmo, lin_power, growth, survey.center_z, kMin, kMax, Nr=1024, window_function=sigma_window)
         sigmaInt.compute(do_dr=True, do_dloga=False)
     else:
-        sigmaInt = SigmaInterpolator(cosmo, lin_power, growth, survey.mMin, survey.mMax, survey.center_z, integrationHelper, Nr=1024, window_function=window)
+        sigmaInt = SigmaInterpolator(cosmo, lin_power, growth, survey.mMin, survey.mMax, survey.center_z, integrationHelper, Nr=1024, window_function=sigma_window)
         sigmaInt.compute(kMin, kMax, do_dr=True, do_dloga=False)
 
     if jenkins_mass:
