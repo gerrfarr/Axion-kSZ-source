@@ -78,7 +78,9 @@ class CorrelationFunctions(object):
     def get_correlation_functions(self, r_vals, z_vals, unbiased=False):
         z_vals = np.asarray(z_vals)
         r_vals = np.asarray(r_vals)
-        assert(np.all(np.isin(z_vals, self.__z_vals)) and self.__computed and np.max(r_vals)<=np.max(self.__r_vals) and np.min(r_vals)>=np.min(self.__r_vals))
+        assert(np.all(np.isin(z_vals, self.__z_vals)))
+        assert(self.__computed)
+        assert(np.max(r_vals)<=np.max(self.__r_vals) and np.min(r_vals)>=np.min(self.__r_vals))
         assert(z_vals.shape == r_vals.shape or z_vals.shape == () or r_vals.shape == ())
         if r_vals.shape == ():
             shape = z_vals.shape
