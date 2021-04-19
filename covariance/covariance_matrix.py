@@ -57,7 +57,7 @@ class Covariance(object):
         self.__cov_cross = None
 
     def comoving_distance(self, z):
-        return 3000.0 / self.__cosmo.h * self.__intHelper.integrate(lambda zp: 1 / (self.__cosmo.E(zp)), 0, z)
+        return 3000.0 * self.__intHelper.integrate(lambda zp: 1 / (self.__cosmo.E(zp)), 0, z)
 
     def survey_volume(self, z_1, z_2):
         return 4/3 * np.pi * self.__f_sky * (self.comoving_distance(z_2) ** 3 - self.comoving_distance(z_1) ** 3)
@@ -99,7 +99,7 @@ class Covariance(object):
         r2Mesh, dump = np.meshgrid(r_pairs[:,1], self.__center_z)
         volumeMesh = np.einsum('i,j->ij', self.__bin_volumes, np.ones(r_pairs.shape[0]))
 
-        prefactors = 4/(np.pi**2*volumeMesh) * 100.0**2/(1+self.__correlations.get_correlation_functions(r1Mesh, zMesh)[0])/(1+self.__correlations.get_correlation_functions(r2Mesh, zMesh)[0])
+        prefactors = 4/(np.pi**2*volumeMesh) * 100.0**2 * self.__cosmo.E(zMesh)**2 /(1+self.__correlations.get_correlation_functions(r1Mesh, zMesh)[0])/(1+self.__correlations.get_correlation_functions(r2Mesh, zMesh)[0])
 
         eval_vals_logk, weights = self.__intHelper.get_points_weights(np.log(self.__kmin), np.log(self.__kmax))
         logkMesh = np.einsum('i, jk->jki', eval_vals_logk, np.ones(zMesh.shape))

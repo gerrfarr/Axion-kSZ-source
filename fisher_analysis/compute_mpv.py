@@ -66,8 +66,8 @@ def compute_mean_pairwise_velocity(r_vals, rMin, cosmo, axionCAMB_wrapper, surve
     if do_unbiased:
         corr.compute(unbiased=True, old_bias=old_bias)
         xi_unbiased, xi, dbarxi_dloga_unbiased, dbarxi_dloga = corr.get_correlation_functions(rMesh, zMesh, unbiased=True)
-        v = r_vals * 100 * dbarxi_dloga / (3 * (1 + xi))
-        v_dm = r_vals * 100 * dbarxi_dloga_unbiased / (3 * (1 + xi_unbiased))
+        v = r_vals * 100 * cosmo.E(zMesh) * dbarxi_dloga / (3 * (1 + xi))
+        v_dm = r_vals * 100 * cosmo.E(zMesh) * dbarxi_dloga_unbiased / (3 * (1 + xi_unbiased))
         if get_correlation_functions:
             return v, v_dm, xi_unbiased, xi, dbarxi_dloga_unbiased, dbarxi_dloga
         else:
@@ -75,7 +75,7 @@ def compute_mean_pairwise_velocity(r_vals, rMin, cosmo, axionCAMB_wrapper, surve
     else:
         corr.compute(unbiased=False, old_bias=old_bias)
         xi, dbarxi_dloga = corr.get_correlation_functions(rMesh, zMesh, unbiased=False)
-        v = r_vals * 100 * dbarxi_dloga / (3 * (1 + xi))
+        v = r_vals * 100 * cosmo.E(zMesh) * dbarxi_dloga / (3 * (1 + xi))
         if get_correlation_functions:
             return v, xi, dbarxi_dloga
         else:
