@@ -52,3 +52,4 @@ class LinearPowerInterpolation(object):
         except ValueError as ex:
             print(ex)
             print(np.min(k), np.max(k))
+            raise ValueError("A value in x_new is outside the interpolation range")
