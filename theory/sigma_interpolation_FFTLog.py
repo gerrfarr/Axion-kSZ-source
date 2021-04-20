@@ -98,6 +98,12 @@ class SigmaInterpolatorFFTLog(object):
     def dsigma_dloga_of_m(self, m, z):
         return self.__dsigma_sq_dloga_interpolation(self.radius_of_mass(m), z) / (2 * self(m, z))
 
+    def dlogSigma_sq_dloga_of_m(self, m, z):
+        return self.__dsigma_sq_dloga_interpolation(self.radius_of_mass(m), z) / self.__sigma_sq_interpolation(self.radius_of_mass(m), z)
+
+    def dlogSigma_dloga_of_m(self, m, z):
+        return self.dlogSigma_sq_dloga_of_m(m,z)/2.0
+
     def dsigma_dr_of_r(self, r, z):
         return self.__dsigma_sq_dr_interpolation(r, z) / (2 * self.sigma_of_r(r, z))
 
