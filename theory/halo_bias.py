@@ -75,21 +75,21 @@ class HaloBias(HaloBiasBase):
         return num1/denom, num2/denom
 
     def compute_asymptotic(self):
-        self._nbar = np.array([spIntegrate(lambda logM: self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax))[0] for z in self._z_vals])
+        self._nbar = np.array([self.__intHelper.integrate(lambda logM: self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax)) for z in self._z_vals])
 
-        self._bsqm_mean = np.array([spIntegrate(lambda logM: np.exp(logM) * self.simple_bias(np.exp(logM), z)**2 * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax))[0] for z in self._z_vals]) / self._nbar
-        self._bm_mean = np.array([spIntegrate(lambda logM: np.exp(logM) * self.simple_bias(np.exp(logM), z) * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax))[0] for z in self._z_vals]) / self._nbar
-        self._m_mean = np.array([spIntegrate(lambda logM: np.exp(logM) * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax))[0] for z in self._z_vals]) / self._nbar
+        self._bsqm_mean = np.array([self.__intHelper.integrate(lambda logM: np.exp(logM) * self.simple_bias(np.exp(logM), z)**2 * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax)) for z in self._z_vals]) / self._nbar
+        self._bm_mean = np.array([self.__intHelper.integrate(lambda logM: np.exp(logM) * self.simple_bias(np.exp(logM), z) * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax)) for z in self._z_vals]) / self._nbar
+        self._m_mean = np.array([self.__intHelper.integrate(lambda logM: np.exp(logM) * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax)) for z in self._z_vals]) / self._nbar
 
         self._bsqm_assign_func = lambda z: self._bsqm_mean[np.where(z == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
         self._bm_assign_func = lambda z: self._bm_mean[np.where(z == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
         self._m_assign_func = lambda z: self._m_mean[np.where(z == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
 
         if self._window_function == "top_hat":
-            self._bsq_TH = np.array([spIntegrate(lambda x: x / self.mass_of_radius(x / self._kMax) * self._mass_function(self.mass_of_radius(x / self._kMax), z) * self.simple_bias(self.mass_of_radius(x / self._kMax), z)**2, self.radius_of_mass(self._mMin) * self._kMax, self.radius_of_mass(self._mMax) * self._kMax)[0] for z in self._z_vals])
-            self._b_TH = np.array([spIntegrate(lambda x: x / self.mass_of_radius(x / self._kMax) * self._mass_function(self.mass_of_radius(x / self._kMax), z) * self.simple_bias(self.mass_of_radius(x / self._kMax), z), self.radius_of_mass(self._mMin) * self._kMax, self.radius_of_mass(self._mMax) * self._kMax)[0] for z in self._z_vals])
+            self._bsq_TH = np.array([self.__intHelper.integrate(lambda x: x / self.mass_of_radius(x / self._kMax) * self._mass_function(self.mass_of_radius(x / self._kMax), z) * self.simple_bias(self.mass_of_radius(x / self._kMax), z)**2, self.radius_of_mass(self._mMin) * self._kMax, self.radius_of_mass(self._mMax) * self._kMax) for z in self._z_vals])
+            self._b_TH = np.array([self.__intHelper.integrate(lambda x: x / self.mass_of_radius(x / self._kMax) * self._mass_function(self.mass_of_radius(x / self._kMax), z) * self.simple_bias(self.mass_of_radius(x / self._kMax), z), self.radius_of_mass(self._mMin) * self._kMax, self.radius_of_mass(self._mMax) * self._kMax) for z in self._z_vals])
 
-            self._n_TH = np.array([spIntegrate(lambda x: x / self.mass_of_radius(x / self._kMax) * self._mass_function(self.mass_of_radius(x / self._kMax), z), self.radius_of_mass(self._mMin) * self._kMax, self.radius_of_mass(self._mMax) * self._kMax)[0] for z in self._z_vals])
+            self._n_TH = np.array([self.__intHelper.integrate(lambda x: x / self.mass_of_radius(x / self._kMax) * self._mass_function(self.mass_of_radius(x / self._kMax), z), self.radius_of_mass(self._mMin) * self._kMax, self.radius_of_mass(self._mMax) * self._kMax) for z in self._z_vals])
 
             self._bsq_TH_assign_func = lambda z: self._bsq_TH[np.where(z == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
             self._b_TH_assign_func = lambda z: self._b_TH[np.where(z == self._z_vals[:, None])[0]].reshape(np.array(z).shape)

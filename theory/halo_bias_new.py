@@ -63,10 +63,10 @@ class HaloBias(HaloBiasBase):
         return vals2 / nBarMesh, vals1 / nBarMesh
 
     def compute_asymptotic(self):
-        self._nbar = np.array([spIntegrate(lambda logM: self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax))[0] for z in self._z_vals])
+        self._nbar = np.array([self.__intHelper.integrate(lambda logM: self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax)) for z in self._z_vals])
 
-        self._b_mean = np.array([spIntegrate(lambda logM: self.simple_bias(np.exp(logM), z) * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax))[0] for z in self._z_vals]) / self._nbar
-        self._m_mean = np.array([spIntegrate(lambda logM: np.exp(logM) * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax))[0] for z in self._z_vals]) / self._nbar
+        self._b_mean = np.array([self.__intHelper.integrate(lambda logM: self.simple_bias(np.exp(logM), z) * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax)) for z in self._z_vals]) / self._nbar
+        self._m_mean = np.array([self.__intHelper.integrate(lambda logM: np.exp(logM) * self._mass_function(np.exp(logM), z), np.log(self._mMin), np.log(self._mMax)) for z in self._z_vals]) / self._nbar
 
         self._b_assign_func = lambda z: self._b_mean[np.where(z.flatten() == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
         self._m_assign_func = lambda z: self._m_mean[np.where(z.flatten() == self._z_vals[:, None])[0]].reshape(np.array(z).shape)
