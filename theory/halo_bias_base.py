@@ -28,7 +28,7 @@ class HaloBiasBase(object):
         if window_function == 'sharp_k' and kMax > 1 / self.radius_of_mass(mMin):
             warnings.warn(f"The given value of k_max={kMax:.2E} is not feasible because you chose a sharp-k filter and a maximum mass of m_min={mMin:.2E}. k_max has instead be set to {1 / self.radius_of_mass(mMin):.2E}", RuntimeWarning)
             kMax = 1.0 / self.radius_of_mass(mMin)
-            kMin = 1.0 / self.radius_of_mass(mMax)
+            #kMin = 1.0 / self.radius_of_mass(mMax)
 
         self._k_vals = np.logspace(np.log10(kMin), np.log10(kMax), Nk)
         self._kMin, self._kMax = kMin, kMax
