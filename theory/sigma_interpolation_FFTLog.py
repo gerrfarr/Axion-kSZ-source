@@ -72,7 +72,7 @@ class SigmaInterpolatorFFTLog(object):
             self.__interpolator_dr = RectBivariateSpline(np.log10(self.__r_vals_deriv), self.__z_vals, self.__dsigma_sq_dr_vals.T, bbox=[np.min(np.log10(self.__r_vals_deriv)), np.max(np.log10(self.__r_vals_deriv)), np.min(self.__z_vals), np.max(self.__z_vals)], kx=3, ky=1, s=0)
 
         if do_dloga:
-            integrand_dloga = integrand_base * self.__growth.f(kMesh, zMesh)
+            integrand_dloga = 2 * integrand_base * self.__growth.f(kMesh, zMesh)
             dump, self.__dsigma_sq_dloga_vals = self.__transform(integrand_dloga, extrap=True)
 
             self.__interpolator_dloga = RectBivariateSpline(np.log10(self.__r_vals), self.__z_vals, self.__dsigma_sq_dloga_vals.T, bbox=[np.min(np.log10(self.__r_vals)), np.max(np.log10(self.__r_vals)), np.min(self.__z_vals), np.max(self.__z_vals)], kx=3, ky=1, s=0)
