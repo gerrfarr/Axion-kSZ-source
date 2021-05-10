@@ -11,11 +11,13 @@ class Cosmology(object):
     Mpc_to_cm = 3.086e24  # cm/Mpc
     Mpc_to_m = 3.08568e22  # m/Mpc
     E_to_invL = 1 / 1.9746359e-7  # m^-1/eV
-    RHO_C = 1.86e-29  # g/cm^3/h^2 (rho_B=Omega_Bh2 RHO_C)
+    E_to_m = 1.7826627e-33 #g/eV
+    RHO_C = 1.86e-29  # h^2 g/cm^3 (rho_B=Omega_Bh2 RHO_C)
     m_planck_L = 1.91183e57  # 1/Mpc
     delta_crit = 1.686
     m_sun = 1.988e33  # g
     m_proton = 1.6726219e-24  # g
+    G = 6.70711e-57 #eV^{-2}
 
     def __init__(self):
 
@@ -201,9 +203,9 @@ class Cosmology(object):
     def rho_crit(self):
         """
 
-        :return: critical density in units of eV
+        :return: critical density in units of h^2 eV^4
         """
-        return 8.11299e-11*self.__h**2
+        return self.RHO_C/self.E_to_m*100**3/self.E_to_invL**3
 
     @property
     def rho_mean(self):
@@ -211,7 +213,7 @@ class Cosmology(object):
 
         :return: mean matter density in units of h^{-1} M_sun/(h^{-1} Mpc)^3 = h^2 M_sun/Mpc^3
         """
-        return self.omegaM*self.RHO_C*self.Mpc_to_cm**3/self.m_sun
+        return self.OmegaM*self.RHO_C*self.Mpc_to_cm**3/self.m_sun
 
     def E(self, z):
         return np.sqrt(self.__OmegaR * (1 + z)**4 + self.OmegaM * (1 + z)**3 + self.OmegaLambda + (1 - self.OmegaM - self.OmegaLambda) * (1 + z)**2)
