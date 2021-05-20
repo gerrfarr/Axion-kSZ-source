@@ -3,6 +3,7 @@ from ..theory.sigma_interpolation import SigmaInterpolator
 from ..theory.sigma_interpolation_FFTLog import SigmaInterpolatorFFTLog
 from ..theory.halo_bias import HaloBias
 from ..theory.halo_bias_new import HaloBias as HaloBiasNew
+from ..theory.halo_bias_full import HaloBias as HaloBiasFull
 from ..theory.mass_functions import JenkinsMassFunction, PressSchechterMassFunction
 from ..theory.correlation_functions import CorrelationFunctions
 from ..theory.correlation_functions_FFTLog import CorrelationFunctions as CorrelationFunctionsFFTLog
@@ -52,7 +53,7 @@ def compute_mean_pairwise_velocity(r_vals, rMin, cosmo, axionCAMB_wrapper, surve
     if old_bias:
         halo_bias = HaloBias(cosmo, sigmaInt, mass_function, survey.mMin, survey.mMax, kMin, kMax, survey.center_z, integrationHelper, Nk=1024, window_function=window)
     elif full_bias:
-        halo_bias = HaloBiasNew(cosmo, sigmaInt, mass_function, survey.mMin, survey.mMax, kMin, kMax, survey.center_z, integrationHelper, Nk=1024, window_function=window)
+        halo_bias = HaloBiasFull(cosmo, sigmaInt, mass_function, survey.mMin, survey.mMax, kMin, kMax, survey.center_z, integrationHelper, Nk=1024, window_function=window)
     else:
         halo_bias = HaloBiasNew(cosmo, sigmaInt, mass_function, survey.mMin, survey.mMax, kMin, kMax, survey.center_z, integrationHelper, Nk=1024, window_function=window)
 
