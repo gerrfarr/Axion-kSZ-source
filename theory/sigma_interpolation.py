@@ -122,3 +122,9 @@ class SigmaInterpolator(object):
 
     def dlogSigma_dlogm(self, m, z):
         return self.dsigma_dm(m, z)*m/self(m,z)
+
+    def dlogSigma_sq_dloga_of_m(self, m, z):
+        return self.__dsigma_sq_dloga_interpolation(self.radius_of_mass(m), z) / self.__sigma_sq_interpolation(self.radius_of_mass(m), z)
+
+    def dlogSigma_dloga_of_m(self, m, z):
+        return self.dlogSigma_sq_dloga_of_m(m,z)/2.0
