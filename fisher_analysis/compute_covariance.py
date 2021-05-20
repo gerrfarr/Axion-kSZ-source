@@ -3,6 +3,7 @@ from ..theory.sigma_interpolation import SigmaInterpolator
 from ..theory.sigma_interpolation_FFTLog import SigmaInterpolatorFFTLog
 from ..theory.halo_bias import HaloBias
 from ..theory.halo_bias_new import HaloBias as HaloBiasNew
+from ..theory.halo_bias_full import HaloBias as HaloBiasFull
 from ..theory.mass_functions import JenkinsMassFunction, PressSchechterMassFunction
 from ..theory.correlation_functions import CorrelationFunctions
 from ..theory.correlation_functions_FFTLog import CorrelationFunctions as CorrelationFunctionsFFTLog
@@ -15,7 +16,7 @@ from ..auxiliary.integration_helper import IntegrationHelper
 from ..auxiliary.survey_helper import SurveyType
 from ..covariance.covariance_matrix import Covariance
 
-def compute_covariance_matrix(r_vals, rMin, deltaR, cosmo, axionCAMB_wrapper, survey, window="gaussian", sigma_window=None, old_bias=False, jenkins_mass=False, integrationHelper=None, kMin=1.0e-4, kMax=1.0e2, provide_covmat_object=False, use_FFTLog=False, use_approximations=False):
+def compute_covariance_matrix(r_vals, rMin, deltaR, cosmo, axionCAMB_wrapper, survey, window="gaussian", sigma_window=None, old_bias=False, full_bias=False, jenkins_mass=False, integrationHelper=None, kMin=1.0e-4, kMax=1.0e2, provide_covmat_object=False, use_FFTLog=False, use_approximations=False):
 
     lin_power = axionCAMB_wrapper.get_linear_power()
     growth = axionCAMB_wrapper.get_growth()
@@ -41,10 +42,12 @@ def compute_covariance_matrix(r_vals, rMin, deltaR, cosmo, axionCAMB_wrapper, su
 
     if old_bias:
         halo_bias = HaloBias(cosmo, sigmaInt, mass_function, survey.mMin, survey.mMax, kMin, kMax, survey.center_z, integrationHelper, Nk=1024, window_function=window)
+    elif full_bias:
+        halo_bias = HaloBiasFull(cosmo, growth, sigmaInt, mass_function, survey.mMin, survey.mMax, kMin, kMax, survey.center_z, integrationHelper, Nk=1024, window_function=window)
     else:
         halo_bias = HaloBiasNew(cosmo, sigmaInt, mass_function, survey.mMin, survey.mMax, kMin, kMax, survey.center_z, integrationHelper, Nk=1024, window_function=window)
 
-    if use_approximations and not old_bias:
+    if use_approximations and not (old_bias or full_bias):
         halo_bias.compute_approximation()
     else:
         halo_bias.compute()
