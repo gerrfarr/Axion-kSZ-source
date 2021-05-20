@@ -30,10 +30,10 @@ def compute_covariance_matrix(r_vals, rMin, deltaR, cosmo, axionCAMB_wrapper, su
 
     if use_FFTLog:
         sigmaInt = SigmaInterpolatorFFTLog(cosmo, lin_power, growth, survey.center_z, kMin, kMax, Nr=1024, window_function=sigma_window)
-        sigmaInt.compute(do_dr=True, do_dloga=False)
+        sigmaInt.compute(do_dr=True, do_dloga=full_bias)
     else:
         sigmaInt = SigmaInterpolator(cosmo, lin_power, growth, survey.mMin, survey.mMax, survey.center_z, integrationHelper, Nr=1024, window_function=sigma_window)
-        sigmaInt.compute(kMin, kMax, do_dr=True, do_dloga=False)
+        sigmaInt.compute(kMin, kMax, do_dr=True, do_dloga=full_bias)
 
     if jenkins_mass:
         mass_function = JenkinsMassFunction(cosmo, sigmaInt)
