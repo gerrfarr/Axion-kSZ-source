@@ -21,6 +21,7 @@ class Cosmology(object):
 
     def __init__(self):
 
+
         self.__h=0.6737
         self.__omega_cdm=0.1198
         self.__omega_b=0.02233
