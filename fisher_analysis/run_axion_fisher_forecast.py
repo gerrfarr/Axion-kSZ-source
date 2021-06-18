@@ -117,15 +117,14 @@ if rank==0:
         except:
             return np.full((len(survey.center_z), len(r_vals)), np.nan)
 
-    def bt_deriv(cosmo, wrapper, r_vals, rMin, survey, window, old_bias, intHelper, kMin, kMax):
 
-        lin_power = wrapper.get_linear_power()
-        growth = wrapper.get_growth()
-        cosmo.set_H_interpolation(wrapper.get_hubble())
+    def bt_deriv(cosmo, wrapper, r_vals, rMin, survey, window, old_bias, full_bias, intHelper, kMin, kMax, use_approximations, use_FFTLog):
+        try:
+            v, xi, dbarxi_dloga = compute_mean_pairwise_velocity(r_vals, rMin, cosmo, wrapper, survey, window=window, old_bias=old_bias, full_bias=full_bias, jenkins_mass=False, integrationHelper=intHelper, kMin=kMin, kMax=kMax, do_unbiased=False, get_correlation_functions=True, use_approximations=use_approximations, use_FFTLog=use_FFTLog)
 
-        v, xi, dbarxi_dloga = compute_mean_pairwise_velocity(r_vals, rMin, cosmo, lin_power, growth, survey, window=window, old_bias=old_bias, jenkins_mass=False, integrationHelper=intHelper, kMin=kMin, kMax=kMax, do_unbiased=False, get_correlation_functions=True, use_approximations=use_approximations, use_FFTLog=use_FFTLog)
-
-        return v
+            return v
+        except:
+            return np.full((len(survey.center_z), len(r_vals)), np.nan)
 
 
     parameters_analytic_deriv_functions = {"b": b_deriv, "bt":bt_deriv}
