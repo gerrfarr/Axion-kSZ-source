@@ -30,7 +30,7 @@ comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
 
-axion_masses = [5.0e-27, 5.0e-26, 1.0e-25, 1.0e-24]#[1.0e-27, 1.0e-26, 1.0e-25, 1.0e-24, 1.0e-23]#np.logspace(-27, -23, 41)
+axion_masses = np.logspace(-27, -23, 41)#[5.0e-27, 5.0e-26, 1.0e-25, 1.0e-24]#[1.0e-27, 1.0e-26, 1.0e-25, 1.0e-24, 1.0e-23]#
 
 if rank==0:
     delta_r = 2.0
@@ -39,20 +39,21 @@ if rank==0:
     survey=StageIV(Cosmology.generate())
     window="sharp_k"
     old_bias=False
+    full_bias=True
     kMin,kMax=1.0e-4,1.0e2
-    out_path="/scratch/r/rbond/gfarren/axion_kSZ/fisher_outputs/"
-    prefix="sharpK_5point_FFTLog_approx"
+    out_path="/scratch/r/rbond/gfarren/axion_kSZ/fisher_outputs/sharpK_fullBias_StageIV/"
+    prefix="sharpK_5point_FFTLog"
     use_approximations=True
     use_FFTLog=True
 
     axion_abundances = np.array([1.0e-04, 1.6e-04, 2.5e-04, 4.0e-04, 6.3e-04, 1.0e-03, 1.6e-03, 2.5e-03, 4.0e-03, 6.3e-03, 1.0e-02, 1.6e-02, 2.5e-02, 4.0e-02, 5.3e-02, 6.3e-02, 1.0e-01, 1.1e-01, 1.6e-01, 2.1e-01, 2.5e-01, 2.6e-01, 3.2e-01, 3.7e-01, 4.0e-01, 4.2e-01, 4.7e-01, 5.3e-01, 5.8e-01, 6.3e-01, 6.8e-01, 7.4e-01, 7.9e-01, 8.4e-01, 8.9e-01, 9.5e-01])
 
-    axion_abundance_fractional_step_sizes = np.array([0.05, 0.1, 0.2, 0.4])
+    axion_abundance_fractional_step_sizes = np.array([0.01, 0.05, 0.1, 0.2])
 
-    cosmo_params = ["h", "omegaCDM", "omegaB", "n_s", "A_s", "log_axion_frac"]
-    parameter_fractional_step_sizes = {"h":0.05, "omegaCDM":0.05, "omegaB":0.05, "n_s":0.005, "A_s":0.005, "log_axion_frac":axion_abundance_fractional_step_sizes}
-    parameter_absolute_step_sizes = {"h": 0.0, "omegaCDM": 0.0, "omegaB": 0.0, "n_s": 0.0, "A_s": 0.0, "log_axion_frac": np.zeros(axion_abundance_fractional_step_sizes.shape)}
-    parameter_bounds = {"h": None, "omegaCDM": None, "omegaB": None, "n_s": None, "A_s": None, "log_axion_frac": (-11,0)}
+    cosmo_params = ["h", "omegaDM", "omegaB", "n_s", "A_s", "axion_frac"]#"log_axion_frac"
+    parameter_fractional_step_sizes = {"h":0.05, "omegaDM":0.05, "omegaB":0.05, "n_s":0.005, "A_s":0.005, "axion_frac":axion_abundance_fractional_step_sizes}
+    parameter_absolute_step_sizes = {"h": 0.0, "omegaDM": 0.0, "omegaB": 0.0, "n_s": 0.0, "A_s": 0.0, "axion_frac": np.zeros(axion_abundance_fractional_step_sizes.shape)}
+    parameter_bounds = {"h": None, "omegaDM": None, "omegaB": None, "n_s": None, "A_s": None, "axion_frac":(1.0e-5,1.0)}#"log_axion_frac": (-11,0),
     nuisance_params = ["b"]
 
     number_of_parameter_step_sizes = 0
@@ -86,11 +87,7 @@ if rank==0:
             root_path = out_path[:-len(file_root)]
             wrapper = AxionCAMBWrapper(root_path, file_root, log_path)
 
-            lin_power = wrapper.get_linear_power()
-            growth = wrapper.get_growth()
-            cosmo.set_H_interpolation(wrapper.get_hubble())
-
-            id = p_eval.add_job(compute_mean_pairwise_velocity, r_vals, rMin, cosmo, lin_power, growth, survey, window=window, old_bias=old_bias, jenkins_mass=False, integrationHelper=intHelper, kMin=kMin, kMax=kMax, do_unbiased=False, get_correlation_functions=False, use_approximations=use_approximations, use_FFTLog=use_FFTLog)
+            id = p_eval.add_job(compute_mean_pairwise_velocity, r_vals, rMin, cosmo, wrapper, survey, window=window, old_bias=old_bias, full_bias=full_bias, jenkins_mass=False, integrationHelper=intHelper, kMin=kMin, kMax=kMax, do_unbiased=False, get_correlation_functions=False, use_approximations=use_approximations, use_FFTLog=use_FFTLog)
         else:
             id = p_eval.add_job(lambda survey, r_vals: np.full((len(survey.center_z), len(r_vals)), np.nan), survey, r_vals)
 
@@ -106,19 +103,17 @@ if rank==0:
         growth = wrapper.get_growth()
         cosmo.set_H_interpolation(wrapper.get_hubble())
 
-        id = p_eval.add_job(compute_covariance_matrix, r_vals, rMin, delta_r, cosmo, lin_power, growth, survey, window=window, old_bias=old_bias, jenkins_mass=False, integrationHelper=intHelper, kMin=kMin, kMax=kMax)
+        id = p_eval.add_job(compute_covariance_matrix, r_vals, rMin, delta_r, cosmo, wrapper, survey, window=window, old_bias=old_bias, full_bias=full_bias, jenkins_mass=False, integrationHelper=intHelper, kMin=kMin, kMax=kMax, use_approximations=use_approximations, use_FFTLog=use_FFTLog)
 
         return id
 
-    def b_deriv(cosmo, wrapper, r_vals, rMin, survey, window, old_bias, intHelper, kMin, kMax):
+    def b_deriv(cosmo, wrapper, r_vals, rMin, survey, window, old_bias, full_bias, intHelper, kMin, kMax, use_approximations, use_FFTLog):
+        try:
+            v, xi, dbarxi_dloga = compute_mean_pairwise_velocity(r_vals, rMin, cosmo, wrapper, survey, window=window, old_bias=old_bias, full_bias=full_bias, jenkins_mass=False, integrationHelper=intHelper, kMin=kMin, kMax=kMax, do_unbiased=False, get_correlation_functions=True, use_approximations=use_approximations, use_FFTLog=use_FFTLog)
 
-        lin_power = wrapper.get_linear_power()
-        growth = wrapper.get_growth()
-        cosmo.set_H_interpolation(wrapper.get_hubble())
-
-        v, xi, dbarxi_dloga = compute_mean_pairwise_velocity(r_vals, rMin, cosmo, lin_power, growth, survey, window=window, old_bias=old_bias, jenkins_mass=False, integrationHelper=intHelper, kMin=kMin, kMax=kMax, do_unbiased=False, get_correlation_functions=True, use_approximations=use_approximations, use_FFTLog=use_FFTLog)
-
-        return v*(1-xi)/(1+xi)
+            return v*(1-xi)/(1+xi)
+        except:
+            return np.full((len(survey.center_z), len(r_vals)), np.nan)
 
 
     parameters_analytic_deriv_functions = {"b": b_deriv}
@@ -166,7 +161,7 @@ for i_m, m in enumerate(axion_masses):
                         ds.prep_parameters()
                         parameter_derivatives_tmp[param] = ds
                 else:
-                    analytic_derivs_queue_ids_tmp[param] = p_eval.add_job(parameters_analytic_deriv_functions[param], fiducial_cosmo, fid_axion_camb, r_vals, rMin, survey, window, old_bias, intHelper, kMin, kMax)
+                    analytic_derivs_queue_ids_tmp[param] = p_eval.add_job(parameters_analytic_deriv_functions[param], fiducial_cosmo, fid_axion_camb, r_vals, rMin, survey, window, old_bias, full_bias, intHelper, kMin, kMax, use_approximations, use_FFTLog)
 
             parameter_derivatives.append(parameter_derivatives_tmp)
             analytic_derivs_queue_ids.append(analytic_derivs_queue_ids_tmp)
