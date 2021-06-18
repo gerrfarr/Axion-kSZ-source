@@ -53,7 +53,9 @@ if rank==0:
     parameter_fractional_step_sizes = {"h":0.05, "omegaCDM":0.05, "omegaB":0.05, "n_s":0.005, "A_s":0.005, "log_axion_frac":axion_abundance_fractional_step_sizes}
     parameter_absolute_step_sizes = {"h": 0.0, "omegaCDM": 0.0, "omegaB": 0.0, "n_s": 0.0, "A_s": 0.0, "log_axion_frac": np.zeros(axion_abundance_fractional_step_sizes.shape)}
     parameter_bounds = {"h": None, "omegaCDM": None, "omegaB": None, "n_s": None, "A_s": None, "log_axion_frac": (-11,0)}
-    nuisance_params = ["b"]
+    nuisance_params_zIndep = ["bt"]
+    nuisance_params_zDep = ["b"]
+    nuisance_params = nuisance_params_zIndep + nuisance_params_zDep
 
     number_of_parameter_step_sizes = 0
     for step_size in parameter_fractional_step_sizes.values():
@@ -120,8 +122,18 @@ if rank==0:
 
         return v*(1-xi)/(1+xi)
 
+    def bt_deriv(cosmo, wrapper, r_vals, rMin, survey, window, old_bias, intHelper, kMin, kMax):
 
-    parameters_analytic_deriv_functions = {"b": b_deriv}
+        lin_power = wrapper.get_linear_power()
+        growth = wrapper.get_growth()
+        cosmo.set_H_interpolation(wrapper.get_hubble())
+
+        v, xi, dbarxi_dloga = compute_mean_pairwise_velocity(r_vals, rMin, cosmo, lin_power, growth, survey, window=window, old_bias=old_bias, jenkins_mass=False, integrationHelper=intHelper, kMin=kMin, kMax=kMax, do_unbiased=False, get_correlation_functions=True, use_approximations=use_approximations, use_FFTLog=use_FFTLog)
+
+        return v
+
+
+    parameters_analytic_deriv_functions = {"b": b_deriv, "bt":bt_deriv}
 
     covariance = None
 
@@ -225,7 +237,7 @@ for i_m, m in enumerate(axion_masses):
             deriv_sets = get_deriv_sets(derivatives[i_f], cosmo_params + nuisance_params, parameter_fractional_step_sizes)
             for d_set in deriv_sets:
                 d_set= np.array(d_set)
-                p_fisher.add_job(make_fisher_matrix, d_set[0:-len(nuisance_params)], d_set[-len(nuisance_params):], survey.center_z, covariance)
+                p_fisher.add_job(make_fisher_matrix, d_set[0:-len(nuisance_params_zDep)], d_set[-len(nuisance_params_zDep):], survey.center_z, covariance)
 
         p_fisher.run()
 
