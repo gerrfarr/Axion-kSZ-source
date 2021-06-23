@@ -58,21 +58,30 @@ class SurveyType(object):
         return overlap_area / 360.0**2 * np.pi
 
 class StageSuper(SurveyType):
-    def __init__(self, fid_cosmo):
-        sigma_v=np.array([15.0, 22.0, 27.0, 34.0, 42.0]) #km/s
+    def __init__(self, fid_cosmo, using_btau_param=False):
+        sigma_v = np.array([15.0, 22.0, 27.0, 34.0, 42.0])  # km/s
+        if not using_btau_param:
+            sigma_v = np.sqrt(sigma_v**2+120.0**2)
+
         super().__init__(0.1, 0.6, 5, 1e13*fid_cosmo.h, 1e16*fid_cosmo.h, self.overlap2f_sky(1e4), sigma_v)
 
 class StageIV(SurveyType):
-    def __init__(self, fid_cosmo):
+    def __init__(self, fid_cosmo, using_btau_param=False):
         sigma_v=np.array([15.0, 22.0, 27.0, 34.0, 42.0]) #km/s
+        if not using_btau_param:
+            sigma_v = np.sqrt(sigma_v**2+120.0**2)
         super().__init__(0.1, 0.6, 5, 0.6e14*fid_cosmo.h, 1e16*fid_cosmo.h, self.overlap2f_sky(1e4), sigma_v)
 
 class StageIII(SurveyType):
-    def __init__(self, fid_cosmo):
+    def __init__(self, fid_cosmo, using_btau_param=False):
         sigma_v=np.array([100, 150, 190])#km/s
+        if not using_btau_param:
+            sigma_v = np.sqrt(sigma_v**2+120.0**2)
         super().__init__(0.1, 0.4, 3, 1e14*fid_cosmo.h, 1e16*fid_cosmo.h, self.overlap2f_sky(0.6e4), sigma_v)
 
 class StageII(SurveyType):
-    def __init__(self, fid_cosmo):
+    def __init__(self, fid_cosmo, using_btau_param=False):
         sigma_v=np.array([290, 440, 540])#km/s
+        if not using_btau_param:
+            sigma_v = np.sqrt(sigma_v**2+120.0**2)
         super().__init__(0.1, 0.4, 3, 1e14*fid_cosmo.h, 1e16*fid_cosmo.h, self.overlap2f_sky(0.4e4), sigma_v)

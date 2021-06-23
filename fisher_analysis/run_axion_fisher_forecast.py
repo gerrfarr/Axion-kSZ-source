@@ -20,7 +20,7 @@ from axion_kSZ_source.auxiliary.cosmo_db import CosmoDB
 from axion_kSZ_source.axion_camb_wrappers.run_axion_camb import AxionCAMBWrapper
 from axion_kSZ_source.fisher_analysis.compute_mpv import compute_mean_pairwise_velocity
 from axion_kSZ_source.fisher_analysis.compute_covariance import compute_covariance_matrix
-from axion_kSZ_source.auxiliary.survey_helper import StageII,StageIII,StageIV,SurveyType
+from axion_kSZ_source.auxiliary.survey_helper import StageII,StageIII,StageIV,SurveyType,StageSuper
 
 from axion_kSZ_source.auxiliary.helper_functions import is_array
 from axion_kSZ_source.auxiliary.integration_helper import IntegrationHelper
@@ -36,13 +36,13 @@ if rank==0:
     delta_r = 2.0
     rMin=1.0e-2
     r_vals = np.arange(20.0, 180.0, delta_r)
-    survey=StageIV(Cosmology.generate())
+    survey=StageSuper(Cosmology.generate(), using_btau_param=False)
     window="sharp_k"
     old_bias=False
     full_bias=False
     kMin,kMax=1.0e-4,1.0e2
-    out_path="/scratch/r/rbond/gfarren/axion_kSZ/fisher_outputs/sharpK_tau-marg_StageIV/"
-    prefix="sharpK_5point_FFTLog"
+    out_path="/scratch/r/rbond/gfarren/axion_kSZ/fisher_outputs/sharpK_final_StageSuperIV/"
+    prefix="sharpK_5point_FFTLog_approx"
     use_approximations=True
     use_FFTLog=True
 
