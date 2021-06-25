@@ -6,6 +6,8 @@ from mpi4py import MPI
 import numpy as np
 import os
 
+import argparse
+
 try:
     from axion_kSZ_source.parallelization_helpers.parallelization_queue import ParallelizationQueue
 except Exception:
@@ -33,19 +35,42 @@ rank = comm.Get_rank()
 axion_masses = np.logspace(-27, -23, 41)#[5.0e-27, 5.0e-26, 1.0e-25, 1.0e-24]#[1.0e-27, 1.0e-26, 1.0e-25, 1.0e-24, 1.0e-23]#
 
 if rank==0:
+    parser = argparse.ArgumentParser(description='Process some inputs.')
+    parser.add_argument("-o", "--outpath", dest="outpath", help="path for outputs", default=None)
+    parser.add_argument("-s", "--stage", dest="stage", help="survey stage", default="IV")
+    parser.add_argument("--deltaTau_sq", dest="delta_tau_sq", help="(delta tau/tau)^2", default=0.15, type=float)
+    parser.add_argument("-w", "--window", dest="window", help="window function", default="sharp_k")
+    parser.add_argument("-a", "--approximation", action='store_true', dest='use_approximation', help="use approximations for bias computation", default=False)
+    parser.add_argument("-f", "--FFTLog", action='store_true', dest='use_FFTLog', help="use FFTLog for integral evaluation", default=False)
+
+    args = parser.parse_args()
+
     delta_r = 2.0
     rMin=1.0e-2
     r_vals = np.arange(20.0, 180.0, delta_r)
     using_btau_param = False
-    survey=StageSuper(Cosmology.generate(), delta_tau_sq=0.15)
-    window="sharp_k"
+    if args.stage == "IV":
+        survey=StageIV(Cosmology.generate(), delta_tau_sq=args.delta_tau_sq)
+    elif args.stage == "III":
+        survey = StageIII(Cosmology.generate(), delta_tau_sq=args.delta_tau_sq)
+    elif args.stage == "II":
+        survey = StageII(Cosmology.generate(), delta_tau_sq=args.delta_tau_sq)
+    else:
+        raise Exception("No stage {} known!".format(args.stage))
+
+    window=args.window
     old_bias=False
     full_bias=False
     kMin,kMax=1.0e-4,1.0e2
-    out_path="/scratch/r/rbond/gfarren/axion_kSZ/fisher_outputs/sharpK_final_StageSuperIV/"
-    prefix="sharpK_5point_FFTLog_approx"
-    use_approximations=True
-    use_FFTLog=True
+    out_path= args.outpath if args.outpath is not None else "/scratch/r/rbond/gfarren/axion_kSZ/fisher_outputs/sharpK_final_Stage{}_deltaTau={:.2f}/".format(args.stage, args.delta_tau_sq)
+
+    use_approximations=args.use_approximation
+    use_FFTLog=args.use_FFTLog
+    prefix = "sharpK_5point"
+    if use_FFTLog:
+        prefix+="_FFTLog"
+    if use_approximations:
+        prefix+="_approx"
 
     axion_abundances = np.array([1.0e-04, 1.6e-04, 2.5e-04, 4.0e-04, 6.3e-04, 1.0e-03, 1.6e-03, 2.5e-03, 4.0e-03, 6.3e-03, 1.0e-02, 1.6e-02, 2.5e-02, 4.0e-02, 5.3e-02, 6.3e-02, 1.0e-01, 1.1e-01, 1.6e-01, 2.1e-01, 2.5e-01, 2.6e-01, 3.2e-01, 3.7e-01, 4.0e-01, 4.2e-01, 4.7e-01, 5.3e-01, 5.8e-01, 6.3e-01, 6.8e-01, 7.4e-01, 7.9e-01, 8.4e-01, 8.9e-01, 9.5e-01])
 
