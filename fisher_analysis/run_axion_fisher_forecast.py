@@ -37,7 +37,7 @@ if rank==0:
     rMin=1.0e-2
     r_vals = np.arange(20.0, 180.0, delta_r)
     using_btau_param = False
-    survey=StageSuper(Cosmology.generate(), deltaTau_tau=0.15)
+    survey=StageSuper(Cosmology.generate(), delta_tau_sq=0.15)
     window="sharp_k"
     old_bias=False
     full_bias=False
