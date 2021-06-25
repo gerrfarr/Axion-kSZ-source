@@ -36,7 +36,8 @@ if rank==0:
     delta_r = 2.0
     rMin=1.0e-2
     r_vals = np.arange(20.0, 180.0, delta_r)
-    survey=StageSuper(Cosmology.generate(), using_btau_param=False)
+    using_btau_param = False
+    survey=StageSuper(Cosmology.generate(), deltaTau_tau=0.15)
     window="sharp_k"
     old_bias=False
     full_bias=False
@@ -54,7 +55,7 @@ if rank==0:
     parameter_fractional_step_sizes = {"h":0.05, "omegaDM":0.05, "omegaB":0.05, "n_s":0.005, "A_s":0.005, "axion_frac":axion_abundance_fractional_step_sizes}
     parameter_absolute_step_sizes = {"h": 0.0, "omegaDM": 0.0, "omegaB": 0.0, "n_s": 0.0, "A_s": 0.0, "axion_frac": np.zeros(axion_abundance_fractional_step_sizes.shape)}
     parameter_bounds = {"h": None, "omegaDM": None, "omegaB": None, "n_s": None, "A_s": None, "axion_frac":(1.0e-5,1.0)}#"log_axion_frac": (-11,0),
-    nuisance_params_zIndep = ["bt"]
+    nuisance_params_zIndep = ["bt"] if using_btau_param else []
     nuisance_params_zDep = ["b"]
     nuisance_params = nuisance_params_zIndep + nuisance_params_zDep
 
