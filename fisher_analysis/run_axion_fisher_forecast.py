@@ -55,6 +55,8 @@ if rank==0:
         survey = StageIII(Cosmology.generate(), delta_tau_sq=args.delta_tau_sq)
     elif args.stage == "II":
         survey = StageII(Cosmology.generate(), delta_tau_sq=args.delta_tau_sq)
+    elif args.stage == "SuperIV":
+        survey = StageSuper(Cosmology.generate(), delta_tau_sq=args.delta_tau_sq)
     else:
         raise Exception("No stage {} known!".format(args.stage))
 
