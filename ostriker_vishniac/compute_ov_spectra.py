@@ -16,7 +16,7 @@ from scipy.interpolate import interp1d as interpolate
 from scipy.integrate import cumtrapz
 
 
-def(cosmo, axionCAMBWrapper, integrationHelper=None):
+def compute_ov_spectra(cosmo, axionCAMBWrapper, integrationHelper=None):
     """
 
     Parameters
