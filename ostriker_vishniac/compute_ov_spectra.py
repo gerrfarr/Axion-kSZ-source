@@ -16,7 +16,7 @@ from scipy.interpolate import interp1d as interpolate
 from scipy.integrate import cumtrapz
 
 
-def compute_ov_spectra(cosmo, axionCAMBWrapper, integrationHelper=None):
+def(cosmo, axionCAMBWrapper, integrationHelper=None):
     """
 
     Parameters
@@ -83,7 +83,7 @@ def compute_ov_spectra(cosmo, axionCAMBWrapper, integrationHelper=None):
     z_vals = (1 - a_vals) / a_vals
     k_vals = np.logspace(-2, 3, 300) * cosmo.h  # physical k
 
-    vish = np.full((len(z_vals, len(k_vals))), np.nan)
+    vish = np.full((len(z_vals), len(k_vals)), np.nan)
     for k_i,k in enumerate(k_vals):
         vish[:,k_i] = vish(k, z_vals)
 
