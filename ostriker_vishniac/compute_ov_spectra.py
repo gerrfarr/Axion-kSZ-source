@@ -28,7 +28,7 @@ def compute_ov_spectra(cosmo, axionCAMBWrapper, integrationHelper=None):
     ###SET COMPUTATION OPTIONS
     SINGULARITY = True  # use substitution to deal with singularity in S(k) integrand
 
-    power = axionCAMBWrapper.get_linear_power(extrap_kmin=-5, extrap_kmax=6)
+    power = axionCAMBWrapper.get_linear_power(extrap_kmin=1e-5, extrap_kmax=1e6)
     growth = axionCAMBWrapper.get_growth()
     hubble = axionCAMBWrapper.get_hubble()
 
