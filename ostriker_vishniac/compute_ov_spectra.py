@@ -59,7 +59,7 @@ def compute_ov_spectra(cosmo, axionCAMBWrapper, integrationHelper=None):
             return power_evals * numerator / denominator
 
         if SINGULARITY:
-            integrand = lambda t, u: 10**u * 2 / cosmo.n * t**(2 / cosmo.n - 1) * x_integrand(k, 1.0 - t**(2 / cosmo.n), 10**u, z)
+            integrand = lambda t, u: 10**u * 2 / cosmo.n_s * t**(2 / cosmo.n_s - 1) * x_integrand(k, 1.0 - t**(2 / cosmo.n_s), 10**u, z)
             return np.log(10) * integrand(X_T, U)
         else:
             integrand2 = lambda x, u: 10**u * x_integrand(k, x, 10**u, z)
