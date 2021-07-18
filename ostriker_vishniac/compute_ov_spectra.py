@@ -83,11 +83,11 @@ def compute_ov_spectra(cosmo, axionCAMBWrapper, integrationHelper=None):
     z_vals = (1 - a_vals) / a_vals
     k_vals = np.logspace(-2, 3, 300) * cosmo.h  # physical k
 
-    vish = np.full((len(z_vals), len(k_vals)), np.nan)
+    vish_vals = np.full((len(z_vals), len(k_vals)), np.nan)
     for k_i,k in enumerate(k_vals):
-        vish[:,k_i] = vish(k, z_vals)
+        vish_vals[:,k_i] = vish(k, z_vals)
 
-    interpolation = RectBivariateSpline(np.log10(a_vals), np.log10(k_vals), np.log10(vish))
+    interpolation = RectBivariateSpline(np.log10(a_vals), np.log10(k_vals), np.log10(vish_vals))
     vish_interp = lambda a, k: 10**np.squeeze(interpolation.ev(np.log10(np.array([a])), np.log10(np.array([k]))))
 
     l_vals = np.logspace(0, 5, 300)
