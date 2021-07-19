@@ -40,3 +40,11 @@ class GrowthInterpolation(object):
 
     def f(self, k, z):
         return self.__f_func(k, 1/(1+z))
+
+    @property
+    def kMin(self):
+        return np.min(self.__k_vals)
+
+    @property
+    def kMax(self):
+        return np.max(self.__k_vals)
