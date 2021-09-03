@@ -80,7 +80,7 @@ if rank==0:
             root_path = out_path[:-len(file_root)]
             wrapper = AxionCAMBWrapper(root_path, file_root, log_path)
 
-            id = p_eval.add_job(ov_eval_function, ell_vals, cosmo, wrapper, kMin=kMin, kMax=kMax, zmax=zmax, Nz=Nz, Nk=Nk)
+            id = p_eval.add_job(ov_eval_function, ell_vals, cosmo, wrapper, intHelper, kMin=kMin, kMax=kMax, zmax=zmax, Nz=Nz, Nk=Nk)
         else:
             id = p_eval.add_job(lambda ells: np.full((len(ells)), np.nan), ell_vals)
 
