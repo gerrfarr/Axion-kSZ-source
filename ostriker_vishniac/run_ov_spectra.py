@@ -52,7 +52,7 @@ if rank==0:
     out_path = args.outpath if args.outpath is not None else "/scratch/r/rbond/gfarren/axion_kSZ/"
 
     cosmoDB = CosmoDB()
-    intHelper = IntegrationHelper(1024)
+    intHelper = IntegrationHelper(128)
 
     ell_vals = np.arange(2, 1e4 + 1, 1.0, dtype=int)
     kMin = 1e-4
