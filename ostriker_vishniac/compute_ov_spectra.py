@@ -28,13 +28,39 @@ def compute_ov_spectra(cosmo, axionCAMBWrapper, integrationHelper=None):
     ###SET COMPUTATION OPTIONS
     SINGULARITY = True  # use substitution to deal with singularity in S(k) integrand
 
-    power = axionCAMBWrapper.get_linear_power(extrap_kmin=1e-5, extrap_kmax=1e6)
-    growth = axionCAMBWrapper.get_growth()
+    power_interp = axionCAMBWrapper.get_linear_power()
+    growth_interp = axionCAMBWrapper.get_growth()
     hubble = axionCAMBWrapper.get_hubble()
 
-    dG_dt = lambda k, z: hubble(z)*growth(k, z)*growth.f(k,z)
+    def power(k):
+        cond = np.where(~np.any(np.array([k<growth_interp.kMin, k>growth_interp.kMax]), axis=0))
+        out = np.empty(k.shape)
+        notCond = np.where(np.any(np.array([k<growth_interp.kMin, k>growth_interp.kMax]), axis=0))
+        out[notCond]=0
+        out[cond]=power_interp(k[cond])
 
-    dw_dz = lambda z: 3000.0 / (cosmo.h * cosmo.E(z))
+        return out
+
+    def growth(z, k):
+        cond = np.where(~np.any(np.array([k < growth_interp.kMin, k > growth_interp.kMax]), axis=0))
+        out = np.empty(k.shape)
+        notCond = np.where(np.any(np.array([k < growth_interp.kMin, k > growth_interp.kMax]), axis=0))
+        out[notCond] = 0
+        out[cond] = growth_interp(k[cond], z)
+
+        return out
+
+    def dG_dt(z, k):
+        cond = np.where(~np.all(np.array([k < growth_interp.kMin, k > growth_interp.kMax]), axis=0))
+        out = np.empty(k.shape)
+        notCond = np.where(np.all(np.array([k < growth_interp.kMin, k > growth_interp.kMax]), axis=0))
+        out[notCond] = 0
+        out[cond] = cosmo.E(z)*growth_interp(k[cond], z)*growth_interp.f(k[cond],z)/3000.0
+
+        return out
+
+
+    dw_dz = lambda z: 3000.0 / (cosmo.E(z))
     z_vis = np.linspace(0, 20, 5000)
     w_of_z_vals = cumtrapz(dw_dz(z_vis), z_vis, initial=0.0)
     w_of_z = interpolate(z_vis, w_of_z_vals)
@@ -79,20 +105,21 @@ def compute_ov_spectra(cosmo, axionCAMBWrapper, integrationHelper=None):
 
         return 1 / (16 * np.pi**2) * integrationHelper.integrate(integrand_loga, np.log10(1 / (1 + zmax)), np.log10(1 / (1 + zmin)))
 
-    a_vals = np.logspace(np.log10(1 / (1 + max(z_vis))), 0, 100)
+    a_vals = np.logspace(np.log10(1 / (1 + max(z_vis))), 0, 20)
     z_vals = (1 - a_vals) / a_vals
-    k_vals = np.logspace(-2, 3, 300) * cosmo.h  # physical k
+    k_vals = np.logspace(-3, 2, 100)# physical k
 
     vish_vals = np.full((len(z_vals), len(k_vals)), np.nan)
     for k_i,k in enumerate(k_vals):
-        vish_vals[:,k_i] = vish(k, z_vals)
+        for z_i,z in enumerate(z_vals):
+            vish_vals[z_i,k_i] = vish(k, z)
 
     interpolation = RectBivariateSpline(np.log10(a_vals), np.log10(k_vals), np.log10(vish_vals))
     vish_interp = lambda a, k: 10**np.squeeze(interpolation.ev(np.log10(np.array([a])), np.log10(np.array([k]))))
 
     l_vals = np.logspace(0, 5, 300)
     pp_vals = np.full(len(l_vals), np.nan)
-    for l_i, l in l_vals:
+    for l_i, l in enumerate(l_vals):
         pp_vals[l_i] = C_proj(l, vish_interp)
 
-    return pp_vals
+    return vish_vals, vish_interp, pp_vals

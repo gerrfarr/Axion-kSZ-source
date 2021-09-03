@@ -8,7 +8,7 @@ from .growth_interpolation import GrowthInterpolation
 import time
 
 class AxionCAMBWrapper(object):
-    camb_files=["_params.ini", "_evolution.dat", "_devolution.dat", "_a_vals.dat", "_matterpower_out.dat", "_transfer_out.dat"]
+    camb_files=["_params.ini", "_evolution.dat", "_devolution.dat", "_a_vals.dat", "_matterpower_out.dat", "_transfer_out.dat", "_scalCls.dat"]
     def __init__(self, outpath, fileroot, log_path):
         """
 
@@ -51,7 +51,8 @@ class AxionCAMBWrapper(object):
                         shutil.move(os.getcwd() + "/" + self.__fileroot + path_appendix, self.__outpath + self.__fileroot + path_appendix)
                     except FileNotFoundError as ex:
                         log_file.write("File {} could not be moved. It does not exist.\n".format(self.__fileroot + path_appendix))
-                        success = False
+                        if path_appendix != "_scalCls.dat":
+                            success = False
                     else:
                         log_file.write("File {} successfully moved!\n".format(self.__fileroot + path_appendix))
 
@@ -65,4 +66,7 @@ class AxionCAMBWrapper(object):
 
     def get_hubble(self):
         return HubbleInterpolation(self.__outpath+self.__fileroot+"_a_vals.dat")
+
+    def check_exists(self):
+        return os.path.exists(self.__outpath+self.__fileroot+"_matterpower_out.dat") and os.path.exists(self.__outpath+self.__fileroot+"_transfer_out.dat")
 

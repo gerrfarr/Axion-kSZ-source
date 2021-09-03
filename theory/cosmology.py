@@ -35,7 +35,7 @@ class Cosmology(object):
         self.__omega_axion=0.0
 
     @staticmethod
-    def generate(m_axion=None, omega_axion=None, axion_frac=None, h=None, omega_cdm=None, omega_b=None, n_s=None, A_s=None, read_H_from_file=False):
+    def generate(m_axion=None, omega_axion=None, axion_frac=None, h=None, omega_cdm=None, omega_b=None, n_s=None, A_s=None, tau=None, read_H_from_file=False):
         if not read_H_from_file:
             cos = Cosmology()
         else:
@@ -58,6 +58,9 @@ class Cosmology(object):
 
         if m_axion is not None:
             cos.__m_axion = m_axion
+
+        if tau is not None:
+            cos.__tau = tau
 
         if omega_axion is not None and axion_frac is None:
             cos.__omega_axion = omega_axion
@@ -250,7 +253,7 @@ class CosmologyCustomH(Cosmology):
         return self.H(z)/self.H0
 
     @staticmethod
-    def generate(m_axion=None, omega_axion=None, axion_frac=None, h=None, omega_cdm=None, omega_b=None, n_s=None, A_s=None, read_H_from_file=True):
+    def generate(m_axion=None, omega_axion=None, axion_frac=None, h=None, omega_cdm=None, omega_b=None, n_s=None, A_s=None, tau=None, read_H_from_file=True):
         return Cosmology.generate(m_axion, omega_axion, axion_frac, h, omega_cdm, omega_b, n_s, A_s, read_H_from_file)
 
     def __copy__(self):

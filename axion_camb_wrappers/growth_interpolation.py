@@ -8,7 +8,7 @@ class GrowthInterpolation(object):
 
         a_data = np.loadtxt(file_root + '_a_vals.dat')
         self.__a_vals = a_data[:, 0]
-        assert (a_data[-1, 0] == 1.0)
+        #assert (a_data[-1, 0] == 1.0)
         self.__k_vals = np.loadtxt(file_root + '_matterpower_out.dat')[:, 0]
 
         """
