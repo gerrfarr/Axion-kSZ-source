@@ -123,7 +123,7 @@ if rank == 0:
 
             output_ids[-1].append(schedule_ov_compute(cosmo))
 
-    outputs = np.empty((len(axion_masses, len(axion_abundances), ell_vals)))
+    outputs = np.empty((len(axion_masses), len(axion_abundances), len(ell_vals)))
     for m_i, m in enumerate(axion_masses):
         for f_i, f_a in enumerate(axion_abundances):
             outputs[m_i,f_i] = p_eval.outputs[output_ids[m_i][f_i]]
