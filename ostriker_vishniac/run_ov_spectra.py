@@ -67,19 +67,19 @@ if rank==0:
         return wrapper
 
     def schedule_ov_compute(cosmo):
-        ID, ran_TF, successful_TF, out_path, log_path = cosmoDB.get_by_cosmo(cosmo)
+        ID, ran_TF, successful_TF, camb_out_path, log_path = cosmoDB.get_by_cosmo(cosmo)
         if successful_TF:
-            file_root = os.path.basename(out_path)
-            root_path = out_path[:-len(file_root)]
+            file_root = os.path.basename(camb_out_path)
+            root_path = camb_out_path[:-len(file_root)]
             wrapper = AxionCAMBWrapper(root_path, file_root, log_path)
 
-            id = p_eval.add_job(ov_eval_function, ID, ell_vals, cosmo, wrapper, intHelper, kMin=kMin, kMax=kMax, zmax=zmax, Nz=Nz, Nk=Nk)
+            id = p_eval.add_job(ov_eval_function, ID, ell_vals, cosmo, wrapper, intHelper, out_path, kMin=kMin, kMax=kMax, zmax=zmax, Nz=Nz, Nk=Nk)
         else:
             id = p_eval.add_job(lambda ells: np.full((len(ells)), np.nan), ell_vals)
 
         return id
 
-    def ov_eval_function(id, ell_vals, cosmo, camb, intHelper, kMin=1e-4, kMax=1e2, zmax=12.0, Nz=20, Nk=100):
+    def ov_eval_function(id, ell_vals, cosmo, camb, intHelper, out_path, kMin=1e-4, kMax=1e2, zmax=12.0, Nz=20, Nk=100):
         k_vals = np.logspace(np.log10(kMin), np.log10(kMax), Nk)
         a_vals = np.linspace(1/(1+zmax), 1, Nz)
         z_vals = 1/a_vals - 1
