@@ -18,19 +18,12 @@ except Exception:
 
 from axion_kSZ_source.auxiliary.cosmo_db import CosmoDB
 from axion_kSZ_source.axion_camb_wrappers.run_axion_camb import AxionCAMBWrapper
-from axion_kSZ_source.axion_camb_wrappers.growth_interpolation import GrowthInterpolation
-from axion_kSZ_source.axion_camb_wrappers.power_interpolation import LinearPowerInterpolation
-from axion_kSZ_source.axion_camb_wrappers.hubble_interpolation import HubbleInterpolation
-from axion_kSZ_source.ostriker_vishniac.compute_ov_spectra import compute_ov_spectra
 
 from axion_kSZ_source.theory.cosmology import Cosmology, CosmologyCustomH
 from axion_kSZ_source.auxiliary.integration_helper import IntegrationHelper
 
 from axion_kSZ_source.ostriker_vishniac.ov_new import OV_spectra
-from axion_kSZ_source.ostriker_vishniac.noise_curves import Noise_Models, cosmic_variance
 import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 
 comm = MPI.COMM_WORLD
 size = comm.Get_size()
@@ -80,13 +73,13 @@ if rank==0:
             root_path = out_path[:-len(file_root)]
             wrapper = AxionCAMBWrapper(root_path, file_root, log_path)
 
-            id = p_eval.add_job(ov_eval_function, ell_vals, cosmo, wrapper, intHelper, kMin=kMin, kMax=kMax, zmax=zmax, Nz=Nz, Nk=Nk)
+            id = p_eval.add_job(ov_eval_function, ID, ell_vals, cosmo, wrapper, intHelper, kMin=kMin, kMax=kMax, zmax=zmax, Nz=Nz, Nk=Nk)
         else:
             id = p_eval.add_job(lambda ells: np.full((len(ells)), np.nan), ell_vals)
 
         return id
 
-    def ov_eval_function(ell_vals, cosmo, camb, intHelper, kMin=1e-4, kMax=1e2, zmax=12.0, Nz=20, Nk=100):
+    def ov_eval_function(id, ell_vals, cosmo, camb, intHelper, kMin=1e-4, kMax=1e2, zmax=12.0, Nz=20, Nk=100):
         k_vals = np.logspace(np.log10(kMin), np.log10(kMax), Nk)
         a_vals = np.linspace(1/(1+zmax), 1, Nz)
         z_vals = 1/a_vals - 1
@@ -95,6 +88,8 @@ if rank==0:
         ov = OV_spectra(cosmo, camb, intHelper, kMax=kMax, kMin=kMin)
         ov.compute_S(k_vals, z_vals)
         cells = ov.compute_OV(ell_vals, zmax=zmax)
+
+        np.savetxt(out_path + "ov_out_data/ov_cells_ID={}.dat".format(id), np.vstack([ell_vals, cells]).T)
 
         return cells
 
