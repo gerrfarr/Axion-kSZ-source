@@ -6,6 +6,8 @@ from mpi4py import MPI
 import numpy as np
 import os
 
+from pathlib import Path
+
 import argparse
 
 try:
@@ -71,7 +73,9 @@ if rank==0:
     old_bias=False
     full_bias=False
     kMin,kMax=1.0e-4,1.0e2
-    out_path= args.outpath if args.outpath is not None else "/scratch/r/rbond/gfarren/axion_kSZ/fisher_outputs/sharpK_final_Stage{}_deltaTau={:.2f}/".format(args.stage, args.delta_tau_sq)
+    out_path= args.outpath if args.outpath is not None else "/scratch/r/rbond/gfarren/axion_kSZ/fisher_outputs/final_{}_Stage{}_deltaTau={:.2f}_mMin={:.2E}".format(window,args.stage, args.delta_tau_sq, args.mMin)
+    Path(out_path).mkdir(parents=True, exist_ok=True)
+    out_path+="/"
 
     use_approximations=args.use_approximation
     use_FFTLog=args.use_FFTLog
