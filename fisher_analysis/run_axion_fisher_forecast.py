@@ -39,6 +39,7 @@ if rank==0:
     parser.add_argument("-o", "--outpath", dest="outpath", help="path for outputs", default=None)
     parser.add_argument("-s", "--stage", dest="stage", help="survey stage", default="IV")
     parser.add_argument("--deltaTau_sq", dest="delta_tau_sq", help="(delta tau/tau)^2", default=0.15, type=float)
+    parser.add_argument("--mMin", dest="mMin", help="sample minimum cluster mass", default=None, type=float)
     parser.add_argument("-w", "--window", dest="window", help="window function", default="sharp_k")
     parser.add_argument("-a", "--approximation", action='store_true', dest='use_approximation', help="use approximations for bias computation", default=False)
     parser.add_argument("-f", "--FFTLog", action='store_true', dest='use_FFTLog', help="use FFTLog for integral evaluation", default=False)
@@ -49,16 +50,22 @@ if rank==0:
     rMin=1.0e-2
     r_vals = np.arange(20.0, 180.0, delta_r)
     using_btau_param = False
-    if args.stage == "IV":
-        survey=StageIV(Cosmology.generate(), delta_tau_sq=args.delta_tau_sq)
-    elif args.stage == "III":
-        survey = StageIII(Cosmology.generate(), delta_tau_sq=args.delta_tau_sq)
-    elif args.stage == "II":
-        survey = StageII(Cosmology.generate(), delta_tau_sq=args.delta_tau_sq)
-    elif args.stage == "SuperIV":
-        survey = StageSuper(Cosmology.generate(), delta_tau_sq=args.delta_tau_sq)
+
+    if args.mMin is None:
+        if args.stage == "IV":
+            survey=StageIV(Cosmology.generate(), delta_tau_sq=args.delta_tau_sq)
+        elif args.stage == "III":
+            survey = StageIII(Cosmology.generate(), delta_tau_sq=args.delta_tau_sq)
+        elif args.stage == "II":
+            survey = StageII(Cosmology.generate(), delta_tau_sq=args.delta_tau_sq)
+        elif args.stage == "SuperIV":
+            survey = StageSuper(Cosmology.generate(), delta_tau_sq=args.delta_tau_sq)
+        else:
+            raise Exception("No stage {} known!".format(args.stage))
     else:
-        raise Exception("No stage {} known!".format(args.stage))
+        fid_cosmo = Cosmology.generate()
+        sigma_v = np.array([15.0, 22.0, 27.0, 34.0, 42.0])  # km/s
+        survey = SurveyType(0.1, 0.6, 5, args.mMin*fid_cosmo.h, 1e16*fid_cosmo.h, SurveyType.overlap2f_sky(1e4), sigma_v, delta_tau_sq=args.delta_tau_sq)
 
     window=args.window
     old_bias=False
