@@ -36,4 +36,4 @@ def generate_cosmo_identifier(cosmo):
 
     :type cosmo: Cosmology
     """
-    return hashlib.md5(json_dumps((cosmo.h, cosmo.omegaCDM, cosmo.omegaB, cosmo.omega_axion, cosmo.m_axion, cosmo.n_s, cosmo.A_s, type(cosmo) == CosmologyCustomH)).encode('utf-8')).digest()
+    return hashlib.md5(json_dumps((cosmo.h, cosmo.omegaCDM, cosmo.omegaB, cosmo.omega_axion, cosmo.m_axion, cosmo.n_s, cosmo.A_s, type(cosmo) == CosmologyCustomH)).encode('utf-8')).digest().hex()
