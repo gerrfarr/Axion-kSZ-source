@@ -2,6 +2,7 @@ from ..theory.cosmology import Cosmology, CosmologyCustomH
 import hashlib
 import dataclasses
 import json
+import numpy as np
 
 def is_array(item, cl=None):
     try:
@@ -37,3 +38,6 @@ def generate_cosmo_identifier(cosmo):
     :type cosmo: Cosmology
     """
     return hashlib.md5(json_dumps((cosmo.h, cosmo.omegaCDM, cosmo.omegaB, cosmo.omega_axion, cosmo.m_axion, cosmo.n_s, cosmo.A_s, type(cosmo) == CosmologyCustomH)).encode('utf-8')).digest().hex()
+
+def compare_numeric_values(a,b, tol=1e-12):
+    return np.fabs(1-a/b)<=tol

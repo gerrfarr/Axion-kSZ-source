@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from ..theory.cosmology import Cosmology, CosmologyCustomH
 from .configs import cosmo_database, camb_outputs_path
-from .helper_functions import generate_cosmo_identifier
+from .helper_functions import generate_cosmo_identifier, compare_numeric_values
 
 class CosmoDB(object):
 
@@ -67,8 +67,9 @@ class CosmoDB(object):
             return False
 
     def get_by_cosmo(self, cosmo):
-        if np.any(generate_cosmo_identifier(cosmo) == self.__db['hash_value']):
-            db_entry = self.__db.loc[generate_cosmo_identifier(cosmo) == self.__db['hash_value']].iloc[0]
+        filter = (compare_numeric_values(cosmo.m_axion),  self.__db['m_axion']) & (compare_numeric_values(cosmo.omega_axion),  self.__db['omega_axion']) & (compare_numeric_values(cosmo.h),  self.__db['h']) & (compare_numeric_values(cosmo.omegaCDM),  self.__db['omegaCDM']) & (compare_numeric_values(cosmo.omegaB),  self.__db['omegaB']) & (compare_numeric_values(cosmo.n_s),  self.__db['n_s']) & (compare_numeric_values(cosmo.A_s),  self.__db['A_s']) & ((type(cosmo)==CosmologyCustomH)==self.__db['read_H'])
+        if np.any(filter):
+            db_entry = self.__db.loc[filter].iloc[0]
             return db_entry.name, db_entry['ran_TF'], db_entry['successful_TF'], db_entry['path_root'], db_entry['logs_path']
         else:
             return False
