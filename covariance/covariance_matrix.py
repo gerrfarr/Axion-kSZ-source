@@ -146,11 +146,14 @@ class Covariance(object):
         dump, sigma_vMesh = np.meshgrid(self.__r_vals, self.__sigma_v_vals)
         return 2*sigma_vMesh**2/self.__pair_numbers
 
-    def full_covariance(self, cosmic_variance=True, shot_noise=True, measurement_noise=True):
+    def full_covariance(self, cosmic_variance=True, shot_noise=True, measurement_noise=True, cross_term=True):
 
         noise = np.zeros((self.__cov_cosmic.shape))
         if measurement_noise:
             for i in range(self.__Nz):
                 np.fill_diagonal(noise[i], self.noise_terms()[i])
 
-        return cosmic_variance*self.__cov_cosmic+shot_noise*self.__cov_shot+cosmic_variance*shot_noise*self.__cov_cross+measurement_noise*noise
+        if shot_noise and cosmic_variance:
+            shot_noise=True
+
+        return cosmic_variance*self.__cov_cosmic+shot_noise*self.__cov_shot+cross_term*self.__cov_cross+measurement_noise*noise
