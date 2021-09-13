@@ -67,7 +67,7 @@ class CosmoDB(object):
             return False
 
     def get_by_cosmo(self, cosmo):
-        filter = (compare_numeric_values(cosmo.m_axion),  self.__db['m_axion']) & (compare_numeric_values(cosmo.omega_axion),  self.__db['omega_axion']) & (compare_numeric_values(cosmo.h),  self.__db['h']) & (compare_numeric_values(cosmo.omegaCDM),  self.__db['omegaCDM']) & (compare_numeric_values(cosmo.omegaB),  self.__db['omegaB']) & (compare_numeric_values(cosmo.n_s),  self.__db['n_s']) & (compare_numeric_values(cosmo.A_s),  self.__db['A_s']) & ((type(cosmo)==CosmologyCustomH)==self.__db['read_H'])
+        filter = (compare_numeric_values(cosmo.m_axion,  self.__db['m_axion'])) & (compare_numeric_values(cosmo.omega_axion,  self.__db['omega_axion'])) & (compare_numeric_values(cosmo.h,  self.__db['h'])) & (compare_numeric_values(cosmo.omegaCDM,  self.__db['omegaCDM'])) & (compare_numeric_values(cosmo.omegaB,  self.__db['omegaB'])) & (compare_numeric_values(cosmo.n_s,  self.__db['n_s'])) & (compare_numeric_values(cosmo.A_s,  self.__db['A_s'])) & ((type(cosmo)==CosmologyCustomH)==self.__db['read_H'])
         if np.any(filter):
             db_entry = self.__db.loc[filter].iloc[0]
             return db_entry.name, db_entry['ran_TF'], db_entry['successful_TF'], db_entry['path_root'], db_entry['logs_path']
