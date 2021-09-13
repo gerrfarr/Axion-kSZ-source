@@ -254,7 +254,7 @@ class CosmologyCustomH(Cosmology):
 
     @staticmethod
     def generate(m_axion=None, omega_axion=None, axion_frac=None, h=None, omega_cdm=None, omega_b=None, n_s=None, A_s=None, tau=None, read_H_from_file=True):
-        return Cosmology.generate(m_axion, omega_axion, axion_frac, h, omega_cdm, omega_b, n_s, A_s, read_H_from_file)
+        return Cosmology.generate(m_axion, omega_axion, axion_frac, h, omega_cdm, omega_b, n_s, A_s, tau, read_H_from_file)
 
     def __copy__(self):
         return Cosmology.generate(m_axion=self.m_axion, omega_axion=self.omega_axion, h=self.h, omega_cdm=self.omegaCDM, omega_b=self.omegaB, n_s=self.n_s, A_s=self.A_s, read_H_from_file=True)
