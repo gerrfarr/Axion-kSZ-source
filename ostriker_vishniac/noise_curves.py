@@ -9,6 +9,10 @@ class Noise_Models:
 		noise=delta**2*np.exp(ell*(ell+1)*beam_FWHM**2/(8*np.log(2)))
 		noise[np.where(ell*(ell+1)*noise>cut_off)[0]]=None
 		return noise
+
+	@staticmethod
+	def cmbHD_noise(ell):
+		return Noise_Models.noise_function(ell, 0.25 / 60 / 180 * np.pi, 0.8 / 60 / 180 * np.pi)
 	@staticmethod
 	def s4_noise(ell):
 		return Noise_Models.noise_function(ell, 1.0/60/180*np.pi, 3.0/60/180*np.pi)
