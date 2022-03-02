@@ -29,7 +29,7 @@ comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
 
-axion_masses = np.logspace(-27, -23, 41)#[5.0e-27, 5.0e-26, 1.0e-25, 1.0e-24]#[1.0e-27, 1.0e-26, 1.0e-25, 1.0e-24, 1.0e-23]#
+axion_masses = np.logspace(-33, -27, 61)#np.logspace(-27, -21, 61)#np.logspace(-27, -23, 41)#[5.0e-27, 5.0e-26, 1.0e-25, 1.0e-24]#[1.0e-27, 1.0e-26, 1.0e-25, 1.0e-24, 1.0e-23]#
 
 axion_abundances = np.array([1.0e-04, 1.6e-04, 2.5e-04, 4.0e-04, 6.3e-04, 1.0e-03, 1.6e-03, 2.5e-03, 4.0e-03, 6.3e-03, 1.0e-02, 1.6e-02, 2.5e-02, 4.0e-02, 5.3e-02, 6.3e-02, 1.0e-01, 1.1e-01, 1.6e-01, 2.1e-01, 2.5e-01, 2.6e-01, 3.2e-01, 3.7e-01, 4.0e-01, 4.2e-01, 4.7e-01, 5.3e-01, 5.8e-01, 6.3e-01, 6.8e-01, 7.4e-01, 7.9e-01, 8.4e-01, 8.9e-01, 9.5e-01, 0.999])
 
@@ -125,4 +125,4 @@ if rank == 0:
         for f_i, f_a in enumerate(axion_abundances):
             outputs[m_i,f_i] = p_eval.outputs[output_ids[m_i][f_i]]
 
-    np.save(out_path+"ov_cells", (ell_vals, outputs), allow_pickle=True)
+    np.save(out_path+"ov_cells_lowMass", (ell_vals, outputs), allow_pickle=True)
